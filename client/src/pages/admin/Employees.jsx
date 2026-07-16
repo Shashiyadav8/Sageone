@@ -126,15 +126,14 @@ const Employees = () => {
       {showModal && (
         <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)' }}>
           <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div className="modal-content border-0 shadow" style={{ borderRadius: '8px', overflow: 'hidden' }}>
+            <form className="modal-content border-0 shadow" onSubmit={handleSubmit(onSubmit)} style={{ borderRadius: '8px', overflow: 'hidden' }}>
               <div className="modal-header bg-white border-bottom py-3 px-4 px-md-5">
                 <h5 className="modal-title fw-bold" style={{ color: '#0f172a' }}>{editingEmployee ? 'Edit Employee Record' : 'Create Employee Record'}</h5>
                 <button type="button" className="btn-close" onClick={() => setShowModal(false)} style={{ fontSize: '12px' }}></button>
               </div>
               
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="modal-body p-4 p-md-5 bg-white">
-                  <h6 className="fw-semibold mb-4 text-uppercase text-muted" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>Basic Information</h6>
+              <div className="modal-body p-4 p-md-5 bg-white">
+                <h6 className="fw-semibold mb-4 text-uppercase text-muted" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>Basic Information</h6>
                   <div className="row g-4 mb-5">
                     <div className="col-md-6">
                       <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Employee ID</label>
@@ -201,8 +200,8 @@ const Employees = () => {
                     {editingEmployee ? 'Update Record' : 'Save Record'}
                   </button>
                 </div>
-              </form>
-            </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
