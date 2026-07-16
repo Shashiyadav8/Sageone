@@ -10,6 +10,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+const numberToWords = (num) => {
+  const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+  const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+  if ((num = num.toString()).length > 9) return 'overflow';
+  let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+  if (!n) return; let str = '';
+  str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+  str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+  str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+  str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+  str += (n[5] != 0) ? ((str != '') ? 'And ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+  return str.trim();
+};
+
 const generatePayslipPDF = async (payroll, employee) => {
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
@@ -19,98 +33,156 @@ const generatePayslipPDF = async (payroll, employee) => {
   const fileName = `payslip-${employee.employeeId}-${payroll.month}-${payroll.year}.pdf`;
   const filePath = path.join(uploadsDir, fileName);
 
+  const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
+  let logoHtml = `<div class="logo">Sage<span>Path</span></div>`;
+  if (fs.existsSync(logoPath)) {
+    const bitmap = fs.readFileSync(logoPath);
+    const logoBase64 = `data:image/png;base64,${bitmap.toString('base64')}`;
+    logoHtml = `<img src="${logoBase64}" style="max-height: 55px; max-width: 200px; margin-left: 20px; object-fit: contain;" />`;
+  }
+
   const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <title>Payslip</title>
       <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 40px; }
-        .header { text-align: center; border-bottom: 2px solid #2563EB; padding-bottom: 20px; margin-bottom: 20px; }
-        .logo { font-size: 28px; font-weight: bold; color: #0F172A; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 30px; font-size: 11px; }
+        .header-table { width: 100%; margin-bottom: 10px; }
+        .logo-td { width: 30%; }
+        .logo { font-size: 28px; font-weight: bold; color: #0F172A; margin-left: 20px; }
         .logo span { color: #2563EB; }
-        .title { font-size: 18px; color: #64748B; margin-top: 5px; }
-        .details-table { width: 100%; margin-bottom: 30px; border-collapse: collapse; }
-        .details-table td { padding: 8px; border: 1px solid #E2E8F0; }
-        .details-table td:nth-child(odd) { font-weight: bold; background-color: #F8FAFC; width: 25%; }
-        .details-table td:nth-child(even) { width: 25%; }
+        .address-td { width: 40%; text-align: center; }
+        .company-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
+        .company-address { font-size: 10px; color: #555; }
+        .title-td { width: 30%; text-align: center; }
+        .title-text { font-size: 12px; color: #333; }
+        .title-month { font-size: 14px; font-weight: bold; margin-top: 5px; }
+
+        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .main-table td, .main-table th { border: 1px solid #666; padding: 4px 6px; }
+        .col-label { font-weight: bold; width: 15%; }
+        .col-value { width: 35%; }
         
-        .salary-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .salary-table th { background-color: #2563EB; color: white; padding: 10px; text-align: left; }
-        .salary-table td { padding: 10px; border: 1px solid #E2E8F0; }
+        .salary-header th { background-color: #fff; text-align: center; font-weight: bold; }
+        .amount-col { text-align: right; width: 15%; }
+        .desc-col { width: 35%; }
         
-        .net-pay { font-size: 20px; font-weight: bold; text-align: right; margin-top: 20px; color: #2563EB; }
-        .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #94A3B8; border-top: 1px solid #E2E8F0; padding-top: 20px;}
+        .net-pay-row { font-weight: bold; }
       </style>
     </head>
     <body>
-      <div class="header">
-        <div class="logo">Sage<span>One</span></div>
-        <div class="title">Payslip for ${payroll.month}/${payroll.year}</div>
-      </div>
+      <div style="text-align: left; font-size: 10px; margin-bottom: 5px;">${new Date().toLocaleDateString('en-US', {month: 'numeric', day: 'numeric', year: 'numeric'})} <span style="float: right;">Payslip</span></div>
       
-      <table class="details-table">
+      <table class="header-table">
         <tr>
-          <td>Employee Name</td><td>${employee.firstName} ${employee.lastName}</td>
-          <td>Employee ID</td><td>${employee.employeeId}</td>
+          <td class="logo-td">
+            ${logoHtml}
+          </td>
+          <td class="address-td">
+            <div class="company-name">SagePath Labs Pvt Ltd</div>
+            <div class="company-address">
+              Address: first floor, Plot No.564, Budha Nagar,<br/>
+              Buddha Nagar Colony, Mallikarjuna Nagar,<br/>
+              Boduppal, Hyderabad, Telangana 500092
+            </div>
+          </td>
+          <td class="title-td">
+            <div class="title-text">Payslip for the month</div>
+            <div class="title-month">${payroll.month} ${payroll.year}</div>
+          </td>
+        </tr>
+      </table>
+      
+      <table class="main-table">
+        <tr>
+          <td class="col-label">Employee No</td>
+          <td class="col-value">${employee.employeeId}</td>
+          <td class="col-label">Name</td>
+          <td class="col-value">${employee.firstName} ${employee.lastName}</td>
+          <td class="col-label">Account No</td>
+          <td class="col-value">${employee.banking?.accountNumber || ''}</td>
         </tr>
         <tr>
-          <td>Department</td><td>${employee.department || 'N/A'}</td>
-          <td>Designation</td><td>${employee.designation || 'N/A'}</td>
+          <td class="col-label">Department</td>
+          <td class="col-value">${employee.department || ''}</td>
+          <td class="col-label">Designation</td>
+          <td class="col-value">${employee.designation || ''}</td>
+          <td class="col-label">Location</td>
+          <td class="col-value">Hyderabad</td>
         </tr>
         <tr>
-          <td>Bank Name</td><td>${employee.banking?.bankName || 'N/A'}</td>
-          <td>Account Number</td><td>${employee.banking?.accountNumber || 'N/A'}</td>
-        </tr>
-        <tr>
-          <td>Working Days</td><td>${payroll.workingDays}</td>
-          <td>LOP Days</td><td>${payroll.lopDays}</td>
+          <td class="col-label">UAN</td>
+          <td class="col-value">${employee.banking?.uan || ''}</td>
+          <td class="col-label">Payable Days</td>
+          <td class="col-value">${payroll.workingDays}</td>
+          <td class="col-label">Month Days</td>
+          <td class="col-value">${payroll.workingDays + payroll.lopDays}</td>
         </tr>
       </table>
 
-      <table class="salary-table">
-        <tr>
-          <th>Earnings</th>
-          <th>Amount (₹)</th>
-          <th>Deductions</th>
-          <th>Amount (₹)</th>
+      <table class="main-table">
+        <tr class="salary-header">
+          <th colspan="2">Earnings</th>
+          <th colspan="2">Deductions</th>
+        </tr>
+        <tr class="salary-header">
+          <th>Particulars</th>
+          <th>Amount</th>
+          <th>Particulars</th>
+          <th>Amount</th>
         </tr>
         <tr>
-          <td>Basic</td><td>${payroll.breakdown.earnings.basic.toFixed(2)}</td>
-          <td>PF</td><td>${payroll.breakdown.deductions.pf.toFixed(2)}</td>
+          <td class="desc-col">Basic</td>
+          <td class="amount-col">${payroll.breakdown.earnings.basic.toFixed(2)}</td>
+          <td class="desc-col">Provident Fund (Employee)</td>
+          <td class="amount-col">${payroll.breakdown.deductions.pf.toFixed(2)}</td>
         </tr>
         <tr>
-          <td>HRA</td><td>${payroll.breakdown.earnings.hra.toFixed(2)}</td>
-          <td>ESI</td><td>${payroll.breakdown.deductions.esi.toFixed(2)}</td>
+          <td class="desc-col">House Rent Allowance</td>
+          <td class="amount-col">${payroll.breakdown.earnings.hra.toFixed(2)}</td>
+          <td class="desc-col">ESI Employee</td>
+          <td class="amount-col">${payroll.breakdown.deductions.esi.toFixed(2)}</td>
         </tr>
         <tr>
-          <td>Special Allowance</td><td>${payroll.breakdown.earnings.specialAllowance.toFixed(2)}</td>
-          <td>Professional Tax</td><td>${payroll.breakdown.deductions.professionalTax.toFixed(2)}</td>
+          <td class="desc-col">Special Allowance</td>
+          <td class="amount-col">${payroll.breakdown.earnings.specialAllowance.toFixed(2)}</td>
+          <td class="desc-col">Professional Tax</td>
+          <td class="amount-col">${payroll.breakdown.deductions.professionalTax.toFixed(2)}</td>
         </tr>
         <tr>
-          <td>Medical</td><td>${payroll.breakdown.earnings.medical.toFixed(2)}</td>
-          <td>LOP Deduction</td><td>${payroll.breakdown.deductions.lopDeduction.toFixed(2)}</td>
+          <td class="desc-col">Medical Allowance</td>
+          <td class="amount-col">${payroll.breakdown.earnings.medical.toFixed(2)}</td>
+          <td class="desc-col">LOP Deduction</td>
+          <td class="amount-col">${payroll.breakdown.deductions.lopDeduction.toFixed(2)}</td>
         </tr>
         <tr>
-          <td>Conveyance</td><td>${payroll.breakdown.earnings.conveyance.toFixed(2)}</td>
-          <td>Other Deductions</td><td>${payroll.breakdown.deductions.otherDeductions.toFixed(2)}</td>
+          <td class="desc-col">Conveyance</td>
+          <td class="amount-col">${payroll.breakdown.earnings.conveyance.toFixed(2)}</td>
+          <td class="desc-col">Other Deductions</td>
+          <td class="amount-col">${payroll.breakdown.deductions.otherDeductions.toFixed(2)}</td>
         </tr>
         <tr>
-          <td>Bonus</td><td>${payroll.breakdown.earnings.bonus.toFixed(2)}</td>
-          <td></td><td></td>
+          <td class="desc-col">Bonus</td>
+          <td class="amount-col">${payroll.breakdown.earnings.bonus.toFixed(2)}</td>
+          <td class="desc-col"></td>
+          <td class="amount-col"></td>
         </tr>
-        <tr style="font-weight:bold; background-color: #F8FAFC;">
-          <td>Gross Earnings</td><td>${payroll.grossSalary.toFixed(2)}</td>
-          <td>Total Deductions</td><td>${(payroll.grossSalary - payroll.netSalary).toFixed(2)}</td>
+        <tr style="font-weight: bold;">
+          <td>Total Earnings</td>
+          <td class="amount-col">${payroll.grossSalary.toFixed(2)}</td>
+          <td>Total Deductions</td>
+          <td class="amount-col">${(payroll.grossSalary - payroll.netSalary).toFixed(2)}</td>
         </tr>
       </table>
 
-      <div class="net-pay">Net Salary Payable: ₹ ${payroll.netSalary.toFixed(2)}</div>
-      
-      <div class="footer">
-        <p>This is a computer-generated document. No signature is required.</p>
-        <p>Generated on ${new Date().toLocaleDateString()}</p>
-      </div>
+      <table class="main-table">
+        <tr>
+          <td class="net-pay-row">
+            Net Pay : Rs.${payroll.netSalary.toFixed(2)}/- (${numberToWords(Math.round(payroll.netSalary))})
+          </td>
+        </tr>
+      </table>
     </body>
     </html>
   `;
