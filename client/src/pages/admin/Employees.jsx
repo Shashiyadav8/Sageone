@@ -179,17 +179,21 @@ const Employees = () => {
                   
                   <h6 className="fw-semibold mb-4 text-uppercase text-muted border-top pt-4" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>Banking Details</h6>
                   <div className="row g-4">
-                    <div className="col-md-4">
+                    <div className="col-md-3">
                       <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Bank Name</label>
                       <input type="text" className="form-control" {...register('banking.bankName')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-3">
                       <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Account No</label>
                       <input type="text" className="form-control" {...register('banking.accountNumber')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                     </div>
-                    <div className="col-md-4">
+                    <div className="col-md-3">
                       <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>IFSC Code</label>
                       <input type="text" className="form-control" {...register('banking.ifscCode')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                    </div>
+                    <div className="col-md-3">
+                      <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>UAN No</label>
+                      <input type="text" className="form-control" {...register('documents.uan')} placeholder="PF UAN" style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                     </div>
                   </div>
                 </div>

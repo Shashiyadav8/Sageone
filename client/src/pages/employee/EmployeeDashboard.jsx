@@ -90,8 +90,8 @@ const EmployeeDashboard = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 mt-2">
                 <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Status</span>
-                <span className="badge bg-light text-success border border-success" style={{ fontSize: '11px', fontWeight: '500', padding: '4px 8px' }}>
-                  Active
+                <span className={`badge border ${employee.status === 'Active' ? 'bg-light text-success border-success' : 'bg-light text-secondary border-secondary'}`} style={{ fontSize: '11px', fontWeight: '500', padding: '4px 8px' }}>
+                  {employee.status || 'Active'}
                 </span>
               </div>
             </div>

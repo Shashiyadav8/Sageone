@@ -113,7 +113,7 @@ const generatePayslipPDF = async (payroll, employee) => {
         </tr>
         <tr>
           <td class="col-label">UAN</td>
-          <td class="col-value">${employee.banking?.uan || ''}</td>
+          <td class="col-value">${employee.documents?.uan || ''}</td>
           <td class="col-label">Payable Days</td>
           <td class="col-value">${payroll.workingDays}</td>
           <td class="col-label">Month Days</td>
