@@ -24,15 +24,18 @@ const generatePayroll = async (req, res) => {
     }
 
     // Calculate Earnings
-    const grossEarnings = salaryPackage.basic + salaryPackage.hra + salaryPackage.specialAllowance + 
-                          salaryPackage.medical + salaryPackage.conveyance + salaryPackage.bonus;
+    const grossEarnings = salaryPackage.grossSalary;
+    
+    if (grossEarnings === undefined) {
+      return res.status(400).json({ message: `Salary structure is missing or legacy for employee. Please update their Monthly Gross Salary first.` });
+    }
 
     // Calculate LOP Deduction
     const perDaySalary = grossEarnings / workingDays;
-    const lopDeduction = perDaySalary * (lopDays || 0);
+    const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
 
     // Calculate other Deductions
-    const fixedDeductions = salaryPackage.pf + salaryPackage.esi + salaryPackage.professionalTax + salaryPackage.otherDeductions;
+    const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
     const totalDeductions = lopDeduction + fixedDeductions;
 
     // Calculate Net
@@ -48,19 +51,17 @@ const generatePayroll = async (req, res) => {
       netSalary,
       breakdown: {
         earnings: {
-          basic: salaryPackage.basic,
+          basic: salaryPackage.basicSalary,
           hra: salaryPackage.hra,
-          specialAllowance: salaryPackage.specialAllowance,
-          medical: salaryPackage.medical,
-          conveyance: salaryPackage.conveyance,
-          bonus: salaryPackage.bonus,
+          otherAllowances: salaryPackage.otherAllowances,
         },
         deductions: {
           lopDeduction,
-          pf: salaryPackage.pf,
-          esi: salaryPackage.esi,
+          employerPF: salaryPackage.employerPF,
+          employerESI: salaryPackage.employerESI,
+          employeePF: salaryPackage.employeePF,
+          employeeESI: salaryPackage.employeeESI,
           professionalTax: salaryPackage.professionalTax,
-          otherDeductions: salaryPackage.otherDeductions,
         }
       }
     });
@@ -123,7 +124,7 @@ const generateBulkPayroll = async (req, res) => {
     // Process sequentially to ensure PDF generation works without overloading memory/puppeteer
     for (const data of employeeData) {
       const { employeeId, lopDays } = data;
-      
+
       try {
         const employee = await Employee.findById(employeeId);
         if (!employee) {
@@ -144,15 +145,19 @@ const generateBulkPayroll = async (req, res) => {
         }
 
         // Calculate Earnings
-        const grossEarnings = salaryPackage.basic + salaryPackage.hra + salaryPackage.specialAllowance + 
-                              salaryPackage.medical + salaryPackage.conveyance + salaryPackage.bonus;
+        const grossEarnings = salaryPackage.grossSalary;
+
+        if (grossEarnings === undefined) {
+          skippedPayrolls.push({ name: `${employee.firstName} ${employee.lastName}`, reason: 'Salary structure is missing or legacy. Please update Monthly Gross Salary.' });
+          continue;
+        }
 
         // Calculate LOP Deduction
         const perDaySalary = grossEarnings / workingDays;
-        const lopDeduction = perDaySalary * (lopDays || 0);
+        const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
 
         // Calculate other Deductions
-        const fixedDeductions = salaryPackage.pf + salaryPackage.esi + salaryPackage.professionalTax + salaryPackage.otherDeductions;
+        const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
         const totalDeductions = lopDeduction + fixedDeductions;
 
         // Calculate Net
@@ -168,19 +173,17 @@ const generateBulkPayroll = async (req, res) => {
           netSalary,
           breakdown: {
             earnings: {
-              basic: salaryPackage.basic,
+              basic: salaryPackage.basicSalary,
               hra: salaryPackage.hra,
-              specialAllowance: salaryPackage.specialAllowance,
-              medical: salaryPackage.medical,
-              conveyance: salaryPackage.conveyance,
-              bonus: salaryPackage.bonus,
+              otherAllowances: salaryPackage.otherAllowances,
             },
             deductions: {
               lopDeduction,
-              pf: salaryPackage.pf,
-              esi: salaryPackage.esi,
+              employerPF: salaryPackage.employerPF,
+              employerESI: salaryPackage.employerESI,
+              employeePF: salaryPackage.employeePF,
+              employeeESI: salaryPackage.employeeESI,
               professionalTax: salaryPackage.professionalTax,
-              otherDeductions: salaryPackage.otherDeductions,
             }
           }
         });

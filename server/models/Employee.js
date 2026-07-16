@@ -28,7 +28,7 @@ const employeeSchema = new mongoose.Schema({
   department: String,
   designation: String,
   joiningDate: Date,
-  lpa: Number,
+  grossSalary: Number,
   status: {
     type: String,
     enum: ['Active', 'Inactive', 'On Leave'],

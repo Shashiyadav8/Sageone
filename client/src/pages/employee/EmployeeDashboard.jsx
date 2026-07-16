@@ -23,7 +23,7 @@ const EmployeeDashboard = () => {
         }
       }
     };
-    
+
     fetchEmployeeDetails();
   }, []);
 
@@ -58,7 +58,7 @@ const EmployeeDashboard = () => {
 
   return (
     <div className="container-fluid py-4 px-3 px-md-5" style={{ backgroundColor: '#f9f9fb', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
-      
+
       {/* Header Section */}
       <div className="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end">
         <div>
@@ -115,8 +115,8 @@ const EmployeeDashboard = () => {
                 <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.designation || 'Not Assigned'}</span>
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 mt-2">
-                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>LPA (Lakhs Per Annum)</span>
-                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.lpa ? `₹${employee.lpa}L` : 'Not Configured'}</span>
+                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Monthly Gross Salary</span>
+                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.grossSalary ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(employee.grossSalary) : 'Not Configured'}</span>
               </div>
             </div>
           </div>
@@ -127,7 +127,7 @@ const EmployeeDashboard = () => {
       <h6 className="fw-semibold mb-3 mt-5 d-flex align-items-center text-uppercase text-muted" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>
         <Award size={16} className="me-2" /> Current Salary Structure
       </h6>
-      
+
       {!salaryPackage ? (
         <div className="card border-0 shadow-sm rounded-3 text-center py-5" style={{ backgroundColor: '#ffffff' }}>
           <div className="mb-3">
@@ -146,20 +146,20 @@ const EmployeeDashboard = () => {
               <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
                   <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Basic Salary</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.basic.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.basicSalary || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
                   <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>House Rent Allowance (HRA)</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.hra.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.hra || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center py-2 mt-2">
-                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Special Allowance</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.specialAllowance.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Other Allowances</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.otherAllowances || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <div className="col-lg-6">
             <div className="card border-0 shadow-sm rounded-3 h-100" style={{ backgroundColor: '#ffffff', borderTop: '3px solid #ef4444' }}>
               <div className="card-header bg-white border-bottom py-3 px-4">
@@ -167,16 +167,16 @@ const EmployeeDashboard = () => {
               </div>
               <div className="card-body p-4">
                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Provident Fund (PF)</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.pf.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Provident Fund (Employee)</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.employeePF || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
-                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>ESI</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.esi.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>ESI (Employee)</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.employeeESI || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="d-flex justify-content-between align-items-center py-2 mt-2">
                   <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Professional Tax</span>
-                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{salaryPackage.professionalTax.toLocaleString('en-IN', {minimumFractionDigits: 2})}</span>
+                  <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>₹{(salaryPackage.professionalTax || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                 </div>
               </div>
             </div>

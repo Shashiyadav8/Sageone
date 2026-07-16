@@ -11,8 +11,8 @@ cloudinary.config({
 });
 
 const numberToWords = (num) => {
-  const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-  const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+  const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+  const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
   if ((num = num.toString()).length > 9) return 'overflow';
   let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
   if (!n) return; let str = '';
@@ -72,7 +72,7 @@ const generatePayslipPDF = async (payroll, employee) => {
       </style>
     </head>
     <body>
-      <div style="text-align: left; font-size: 10px; margin-bottom: 5px;">${new Date().toLocaleDateString('en-US', {month: 'numeric', day: 'numeric', year: 'numeric'})} <span style="float: right;">Payslip</span></div>
+      <div style="text-align: left; font-size: 10px; margin-bottom: 5px;">${new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })} <span style="float: right;">Payslip</span></div>
       
       <table class="header-table">
         <tr>
@@ -134,39 +134,39 @@ const generatePayslipPDF = async (payroll, employee) => {
         </tr>
         <tr>
           <td class="desc-col">Basic</td>
-          <td class="amount-col">${payroll.breakdown.earnings.basic.toFixed(2)}</td>
+          <td class="amount-col">${(payroll.breakdown?.earnings?.basic || 0).toFixed(2)}</td>
           <td class="desc-col">Provident Fund (Employee)</td>
-          <td class="amount-col">${payroll.breakdown.deductions.pf.toFixed(2)}</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.employeePF || 0).toFixed(2)}</td>
         </tr>
         <tr>
           <td class="desc-col">House Rent Allowance</td>
-          <td class="amount-col">${payroll.breakdown.earnings.hra.toFixed(2)}</td>
+          <td class="amount-col">${(payroll.breakdown?.earnings?.hra || 0).toFixed(2)}</td>
           <td class="desc-col">ESI Employee</td>
-          <td class="amount-col">${payroll.breakdown.deductions.esi.toFixed(2)}</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.employeeESI || 0).toFixed(2)}</td>
         </tr>
         <tr>
-          <td class="desc-col">Special Allowance</td>
-          <td class="amount-col">${payroll.breakdown.earnings.specialAllowance.toFixed(2)}</td>
+          <td class="desc-col">Other Allowances</td>
+          <td class="amount-col">${(payroll.breakdown?.earnings?.otherAllowances || 0).toFixed(2)}</td>
           <td class="desc-col">Professional Tax</td>
-          <td class="amount-col">${payroll.breakdown.deductions.professionalTax.toFixed(2)}</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.professionalTax || 0).toFixed(2)}</td>
         </tr>
         <tr>
-          <td class="desc-col">Medical Allowance</td>
-          <td class="amount-col">${payroll.breakdown.earnings.medical.toFixed(2)}</td>
-          <td class="desc-col">LOP Deduction</td>
-          <td class="amount-col">${payroll.breakdown.deductions.lopDeduction.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col">Conveyance</td>
-          <td class="amount-col">${payroll.breakdown.earnings.conveyance.toFixed(2)}</td>
-          <td class="desc-col">Other Deductions</td>
-          <td class="amount-col">${payroll.breakdown.deductions.otherDeductions.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col">Bonus</td>
-          <td class="amount-col">${payroll.breakdown.earnings.bonus.toFixed(2)}</td>
           <td class="desc-col"></td>
           <td class="amount-col"></td>
+          <td class="desc-col">LOP Deduction</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.lopDeduction || 0).toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td class="desc-col"></td>
+          <td class="amount-col"></td>
+          <td class="desc-col">Provident Fund (Employer)</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.employerPF || 0).toFixed(2)}</td>
+        </tr>
+        <tr>
+          <td class="desc-col"></td>
+          <td class="amount-col"></td>
+          <td class="desc-col">ESI Employer</td>
+          <td class="amount-col">${(payroll.breakdown?.deductions?.employerESI || 0).toFixed(2)}</td>
         </tr>
         <tr style="font-weight: bold;">
           <td>Total Earnings</td>
@@ -188,7 +188,7 @@ const generatePayslipPDF = async (payroll, employee) => {
   `;
 
   try {
-    const browser = await puppeteer.launch({ 
+    const browser = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
@@ -196,7 +196,7 @@ const generatePayslipPDF = async (payroll, employee) => {
     await page.setContent(htmlContent);
     await page.pdf({ path: filePath, format: 'A4', printBackground: true });
     await browser.close();
-    
+
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {
       resource_type: 'raw',

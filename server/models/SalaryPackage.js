@@ -6,18 +6,20 @@ const salaryPackageSchema = new mongoose.Schema({
     ref: 'Employee',
     required: true,
   },
-  basic: { type: Number, required: true },
+  grossSalary: { type: Number, required: true },
+  basicSalary: { type: Number, required: true },
   hra: { type: Number, required: true },
-  specialAllowance: { type: Number, default: 0 },
-  medical: { type: Number, default: 0 },
-  conveyance: { type: Number, default: 0 },
-  bonus: { type: Number, default: 0 },
-  
-  // Deductions
-  pf: { type: Number, default: 0 },
-  esi: { type: Number, default: 0 },
+  otherAllowances: { type: Number, default: 0 },
+  pfWage: { type: Number, default: 0 },
+  employerPF: { type: Number, default: 0 },
+  employerESI: { type: Number, default: 0 },
+  monthlyCTC: { type: Number, default: 0 },
+  annualCTC: { type: Number, default: 0 },
+  employeePF: { type: Number, default: 0 },
+  employeeESI: { type: Number, default: 0 },
   professionalTax: { type: Number, default: 0 },
-  otherDeductions: { type: Number, default: 0 },
+  totalDeductions: { type: Number, default: 0 },
+  netSalary: { type: Number, default: 0 },
 }, { timestamps: true });
 
 const SalaryPackage = mongoose.model('SalaryPackage', salaryPackageSchema);

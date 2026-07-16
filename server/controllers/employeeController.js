@@ -1,6 +1,7 @@
 const Employee = require('../models/Employee');
 const SalaryPackage = require('../models/SalaryPackage');
 const bcrypt = require('bcrypt');
+const { calculateSalaryStructure } = require('../services/salaryCalculator');
 
 // @desc    Get all employees
 // @route   GET /api/employees
@@ -14,37 +15,17 @@ const getEmployees = async (req, res) => {
   }
 };
 
-// Helper function to auto-generate salary package based on LPA
-const autoGenerateSalaryPackage = async (employeeId, lpa) => {
-  if (!lpa || isNaN(lpa)) return;
-  const grossMonthly = (lpa * 100000) / 12;
-  const basic = grossMonthly * 0.50;
-  const hra = grossMonthly * 0.20;
-  const specialAllowance = grossMonthly * 0.30;
+// Helper function to auto-generate salary package based on Monthly Gross Salary
+const autoGenerateSalaryPackage = async (employeeId, grossSalary) => {
+  if (!grossSalary || isNaN(grossSalary)) return;
   
-  // Standard deductions
-  const pf = basic * 0.12;
-  const professionalTax = 200;
-  const esi = grossMonthly <= 21000 ? grossMonthly * 0.0075 : 0; // ESI is 0.75% for gross <= 21k
-  
-  const packageData = {
-    employee: employeeId,
-    basic,
-    hra,
-    specialAllowance,
-    medical: 0,
-    conveyance: 0,
-    bonus: 0,
-    pf,
-    esi,
-    professionalTax,
-    otherDeductions: 0
-  };
+  const packageData = calculateSalaryStructure(grossSalary);
+  packageData.employee = employeeId;
 
   await SalaryPackage.findOneAndUpdate(
     { employee: employeeId },
     packageData,
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 };
 
@@ -53,7 +34,7 @@ const autoGenerateSalaryPackage = async (employeeId, lpa) => {
 // @access  Private/Admin
 const createEmployee = async (req, res) => {
   try {
-    const { employeeId, firstName, lastName, email, password, department, designation, joiningDate, lpa, banking, documents } = req.body;
+    const { employeeId, firstName, lastName, email, password, department, designation, joiningDate, grossSalary, banking, documents } = req.body;
 
     const employeeExists = await Employee.findOne({ $or: [{ email }, { employeeId }] });
     if (employeeExists) {
@@ -72,15 +53,15 @@ const createEmployee = async (req, res) => {
       department,
       designation,
       joiningDate,
-      lpa,
+      grossSalary,
       banking,
       documents
     });
 
     if (employee) {
-      // Auto-generate salary package based on LPA
-      if (lpa) {
-        await autoGenerateSalaryPackage(employee._id, lpa);
+      // Auto-generate salary package based on Monthly Gross Salary
+      if (grossSalary) {
+        await autoGenerateSalaryPackage(employee._id, grossSalary);
       }
 
       res.status(201).json({
@@ -136,10 +117,10 @@ const updateEmployee = async (req, res) => {
         employee.designation = req.body.designation || employee.designation;
         employee.status = req.body.status || employee.status;
         
-        if (req.body.lpa !== undefined) {
-          employee.lpa = req.body.lpa;
-          if (req.body.lpa) {
-            await autoGenerateSalaryPackage(employee._id, req.body.lpa);
+        if (req.body.grossSalary !== undefined) {
+          employee.grossSalary = req.body.grossSalary;
+          if (req.body.grossSalary) {
+            await autoGenerateSalaryPackage(employee._id, req.body.grossSalary);
           }
         }
         
