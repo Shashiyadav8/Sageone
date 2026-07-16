@@ -2,6 +2,14 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 const generatePayslipPDF = async (payroll, employee) => {
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
@@ -114,9 +122,19 @@ const generatePayslipPDF = async (payroll, employee) => {
     await page.pdf({ path: filePath, format: 'A4', printBackground: true });
     await browser.close();
     
-    return `/uploads/${fileName}`;
+    // Upload to Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, {
+      resource_type: 'raw',
+      folder: 'sageone/payslips',
+      public_id: `payslip-${employee.employeeId}-${payroll.month}-${payroll.year}`
+    });
+
+    // Optionally delete the local file after upload
+    fs.unlinkSync(filePath);
+
+    return result.secure_url;
   } catch (error) {
-    console.error('PDF Generation Error:', error);
+    console.error('PDF Generation/Upload Error:', error);
     throw error;
   }
 };

@@ -195,7 +195,7 @@ const Payroll = () => {
                           ₹{pay.netSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-4 text-end">
-                          <a href={`${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}`} target="_blank" rel="noreferrer" 
+                          <a href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}`} target="_blank" rel="noreferrer" 
                              className="btn btn-sm px-3 py-1 d-inline-flex align-items-center"
                              style={{ backgroundColor: '#f1f5f9', color: '#3b82f6', borderRadius: '4px', fontSize: '13px', fontWeight: '500', textDecoration: 'none' }}>
                             <FileText size={14} className="me-2" /> View PDF

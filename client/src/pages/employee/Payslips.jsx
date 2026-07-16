@@ -77,7 +77,7 @@ const Payslips = () => {
                       </td>
                       <td className="py-3 px-4 text-end">
                         <a 
-                          href={`${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}`} 
+                          href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}`} 
                           target="_blank" 
                           rel="noreferrer"
                           className="btn btn-sm btn-light border text-primary d-inline-flex align-items-center"
