@@ -200,7 +200,6 @@ const Employees = () => {
                     {editingEmployee ? 'Update Record' : 'Save Record'}
                   </button>
                 </div>
-              </div>
             </form>
           </div>
         </div>
