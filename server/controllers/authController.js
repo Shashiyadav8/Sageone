@@ -34,14 +34,12 @@ const loginUser = async (req, res) => {
     }
 
     // 2. Check Employee collection
-    const employee = await Employee.findOne({ $or: [{ email }, { employeeId: email }] });
+    const employee = await Employee.findOne({ employeeId: email }); // The frontend might still pass the ID in the 'email' payload field depending on how the login form is mapped
     if (employee && (await bcrypt.compare(password, employee.password))) {
       console.log('Login success: Employee');
       return res.json({
         _id: employee._id,
-        firstName: employee.firstName,
-        lastName: employee.lastName,
-        email: employee.email,
+        employeeName: employee.employeeName,
         employeeId: employee.employeeId,
         role: 'employee',
         token: generateToken(employee._id, 'employee'),

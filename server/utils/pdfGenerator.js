@@ -99,23 +99,23 @@ const generatePayslipPDF = async (payroll, employee) => {
           <td class="col-label">Employee No</td>
           <td class="col-value">${employee.employeeId}</td>
           <td class="col-label">Name</td>
-          <td class="col-value">${employee.firstName} ${employee.lastName}</td>
-          <td class="col-label">Account No</td>
-          <td class="col-value">${employee.banking?.accountNumber || ''}</td>
+          <td class="col-value">${employee.employeeName}</td>
+          <td class="col-label">Location</td>
+          <td class="col-value">${employee.location || ''}</td>
         </tr>
         <tr>
-          <td class="col-label">Department</td>
-          <td class="col-value">${employee.department || ''}</td>
           <td class="col-label">Designation</td>
           <td class="col-value">${employee.designation || ''}</td>
-          <td class="col-label">Location</td>
-          <td class="col-value">Hyderabad</td>
-        </tr>
-        <tr>
-          <td class="col-label">UAN</td>
-          <td class="col-value">${employee.documents?.uan || ''}</td>
+          <td class="col-label">ESIC No</td>
+          <td class="col-value">${employee.esicNo || ''}</td>
           <td class="col-label">Payable Days</td>
           <td class="col-value">${payroll.workingDays}</td>
+        </tr>
+        <tr>
+          <td class="col-label">UAN No</td>
+          <td class="col-value">${employee.uanNo || ''}</td>
+          <td class="col-label">Status</td>
+          <td class="col-value">${employee.status || 'Active'}</td>
           <td class="col-label">Month Days</td>
           <td class="col-value">${payroll.workingDays + payroll.lopDays}</td>
         </tr>

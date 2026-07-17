@@ -96,7 +96,7 @@ const AdminDashboard = () => {
                   {stats.recentPayrolls.map((payroll) => (
                     <tr key={payroll._id}>
                       <td className="py-3 px-4">
-                        <div className="fw-medium text-dark">{payroll.employee?.firstName} {payroll.employee?.lastName}</div>
+                        <div className="fw-medium text-dark">{payroll.employee?.employeeName || 'Unknown Employee'}</div>
                         <div className="text-muted" style={{ fontSize: '12px' }}>{payroll.employee?.employeeId}</div>
                       </td>
                       <td className="py-3 px-4 text-muted">{new Date(payroll.year, payroll.month - 1).toLocaleString('default', { month: 'short' })} {payroll.year}</td>

@@ -86,8 +86,8 @@ const Employees = () => {
                 <tr>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>ID</th>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Name</th>
-                  <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Email</th>
-                  <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Department</th>
+                  <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Designation</th>
+                  <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Location</th>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Monthly Gross</th>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Status</th>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom text-end" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Actions</th>
@@ -100,9 +100,9 @@ const Employees = () => {
                   employees.map(emp => (
                     <tr key={emp._id}>
                       <td className="py-3 px-4 fw-medium text-dark">{emp.employeeId}</td>
-                      <td className="py-3 px-4 fw-semibold text-dark">{emp.firstName} {emp.lastName}</td>
-                      <td className="py-3 px-4 text-muted">{emp.email}</td>
-                      <td className="py-3 px-4 text-muted">{emp.department || '-'}</td>
+                      <td className="py-3 px-4 fw-semibold text-dark">{emp.employeeName}</td>
+                      <td className="py-3 px-4 text-muted">{emp.designation || '-'}</td>
+                      <td className="py-3 px-4 text-muted">{emp.location || '-'}</td>
                       <td className="py-3 px-4 fw-medium text-dark">{emp.grossSalary ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(emp.grossSalary) : '-'}</td>
                       <td className="py-3 px-4">
                         <span className={`badge border d-inline-flex align-items-center px-2 py-1 ${emp.status === 'Active' ? 'bg-light text-success border-success' : 'bg-light text-secondary border-secondary'}`} style={{ fontSize: '12px', fontWeight: '500' }}>
@@ -137,31 +137,31 @@ const Employees = () => {
                 <div className="row g-4 mb-5">
                   <div className="col-md-6">
                     <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Employee ID</label>
-                    <input type="text" className="form-control" {...register('employeeId', { required: true })} readOnly={!!editingEmployee} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                    <input type="text" className="form-control" {...register('employeeId', { required: true })} disabled={!!editingEmployee} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Email Address</label>
-                    <input type="email" className="form-control" {...register('email', { required: true })} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>First Name</label>
-                    <input type="text" className="form-control" {...register('firstName', { required: true })} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-6">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Last Name</label>
-                    <input type="text" className="form-control" {...register('lastName', { required: true })} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Employee Name</label>
+                    <input type="text" className="form-control" {...register('employeeName', { required: true })} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Password {editingEmployee && '(Leave blank to keep)'}</label>
                     <input type="password" className="form-control" {...register('password', { required: !editingEmployee })} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Department</label>
-                    <input type="text" className="form-control" {...register('department')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-6">
                     <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Designation</label>
                     <input type="text" className="form-control" {...register('designation')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>UAN No</label>
+                    <input type="text" className="form-control" {...register('uanNo')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>ESIC No</label>
+                    <input type="text" className="form-control" {...register('esicNo')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Location</label>
+                    <input type="text" className="form-control" {...register('location')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                   </div>
                   <div className="col-md-6">
                     <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Monthly Gross Salary (₹)</label>
@@ -174,26 +174,6 @@ const Employees = () => {
                       <option value="Inactive">Inactive</option>
                       <option value="On Leave">On Leave</option>
                     </select>
-                  </div>
-                </div>
-
-                <h6 className="fw-semibold mb-4 text-uppercase text-muted border-top pt-4" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>Banking Details</h6>
-                <div className="row g-4">
-                  <div className="col-md-3">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Bank Name</label>
-                    <input type="text" className="form-control" {...register('banking.bankName')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Account No</label>
-                    <input type="text" className="form-control" {...register('banking.accountNumber')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>IFSC Code</label>
-                    <input type="text" className="form-control" {...register('banking.ifscCode')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>UAN No</label>
-                    <input type="text" className="form-control" {...register('documents.uan')} placeholder="PF UAN" style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
                   </div>
                 </div>
               </div>

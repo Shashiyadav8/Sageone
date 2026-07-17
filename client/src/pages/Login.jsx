@@ -76,11 +76,11 @@ const Login = () => {
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <div className="mb-4">
-                <label className="form-label fw-semibold" style={{ fontSize: '13px', color: '#475569' }}>Email or Employee ID</label>
+                <label className="form-label fw-semibold" style={{ fontSize: '13px', color: '#475569' }}>Employee ID (or Admin Email)</label>
                 <input 
                   type="text" 
                   className="form-control" 
-                  placeholder="Enter your email or ID"
+                  placeholder="Enter your ID or Admin Email"
                   {...register('email', { required: 'This field is required' })}
                   style={{ borderRadius: '6px', fontSize: '15px', padding: '12px 16px', border: '1px solid #cbd5e1' }}
                 />

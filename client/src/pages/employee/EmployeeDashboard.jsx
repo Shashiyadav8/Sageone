@@ -63,7 +63,7 @@ const EmployeeDashboard = () => {
       <div className="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end">
         <div>
           <h3 className="fw-bold mb-1" style={{ color: '#1e293b', letterSpacing: '-0.5px' }}>Dashboard</h3>
-          <p className="text-muted mb-0 small">Welcome back, {employee.firstName}. Here is your employment overview.</p>
+          <p className="text-muted mb-0 small">Welcome back, {employee.employeeName}. Here is your employment overview.</p>
         </div>
       </div>
 
@@ -82,11 +82,15 @@ const EmployeeDashboard = () => {
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
                 <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Full Name</span>
-                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.firstName} {employee.lastName}</span>
+                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.employeeName}</span>
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
-                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Email Address</span>
-                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.email}</span>
+                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>UAN No</span>
+                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.uanNo || '-'}</span>
+              </div>
+              <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
+                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>ESIC No</span>
+                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.esicNo || '-'}</span>
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 mt-2">
                 <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Status</span>
@@ -107,8 +111,8 @@ const EmployeeDashboard = () => {
             </div>
             <div className="card-body p-4">
               <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
-                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Department</span>
-                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.department || 'Not Assigned'}</span>
+                <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Location</span>
+                <span className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{employee.location || 'Not Assigned'}</span>
               </div>
               <div className="d-flex justify-content-between align-items-center py-2 border-bottom border-light mt-2">
                 <span className="text-muted fw-medium" style={{ fontSize: '13px' }}>Designation</span>

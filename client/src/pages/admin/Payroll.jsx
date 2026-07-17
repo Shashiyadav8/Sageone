@@ -101,9 +101,8 @@ const Payroll = () => {
   };
 
   const filteredEmployees = employees.filter(emp => 
-    emp.firstName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    emp.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    emp.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
+    emp.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    emp.employeeId?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -140,11 +139,11 @@ const Payroll = () => {
                     <div key={emp._id} className="list-group-item border-bottom py-3 px-4 d-flex justify-content-between align-items-center" style={{ transition: 'background-color 0.2s' }}>
                       <div className="d-flex align-items-center">
                         <div className="rounded-circle bg-light d-flex justify-content-center align-items-center text-primary fw-bold" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
-                          {emp.firstName.charAt(0)}{emp.lastName.charAt(0)}
+                          {emp.employeeName?.charAt(0) || 'E'}
                         </div>
                         <div className="ms-3">
-                          <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{emp.firstName} {emp.lastName}</div>
-                          <div className="text-muted" style={{ fontSize: '12px' }}>{emp.employeeId} • {emp.department || 'N/A'}</div>
+                          <div className="fw-semibold text-dark" style={{ fontSize: '14px' }}>{emp.employeeName}</div>
+                          <div className="text-muted" style={{ fontSize: '12px' }}>{emp.employeeId} • {emp.designation || 'N/A'}</div>
                         </div>
                       </div>
                       <button className="btn btn-light btn-sm text-primary d-flex align-items-center justify-content-center" 
@@ -186,7 +185,7 @@ const Payroll = () => {
                     payrolls.map(pay => (
                       <tr key={pay._id} style={{ cursor: 'default' }}>
                         <td className="py-3 px-4 fw-medium text-dark">
-                          {pay.employee?.firstName} {pay.employee?.lastName}
+                          {pay.employee?.employeeName || 'Unknown Employee'}
                         </td>
                         <td className="py-3 px-4 text-muted">
                           {new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'short' })} {pay.year}
@@ -217,7 +216,7 @@ const Payroll = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content border-0 shadow" style={{ borderRadius: '8px' }}>
               <div className="modal-header border-bottom py-3 px-4">
-                <h6 className="modal-title fw-semibold">Process Salary: {selectedEmployee?.firstName} {selectedEmployee?.lastName}</h6>
+                <h6 className="modal-title fw-semibold">Process Salary: {selectedEmployee?.employeeName}</h6>
                 <button type="button" className="btn-close" onClick={() => !generating && setShowModal(false)} style={{ fontSize: '12px' }}></button>
               </div>
               <form onSubmit={handleSubmit(onSubmit)}>
@@ -326,7 +325,7 @@ const Payroll = () => {
                           <tr>
                             <th className="py-3 px-3 text-uppercase text-muted fw-semibold border-bottom-0" style={{ fontSize: '11px', letterSpacing: '0.5px', borderRadius: '6px 0 0 6px' }}>Employee ID</th>
                             <th className="py-3 px-3 text-uppercase text-muted fw-semibold border-bottom-0" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Full Name</th>
-                            <th className="py-3 px-3 text-uppercase text-muted fw-semibold border-bottom-0" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Department</th>
+                            <th className="py-3 px-3 text-uppercase text-muted fw-semibold border-bottom-0" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Designation</th>
                             <th className="py-3 px-3 text-uppercase text-muted fw-semibold border-bottom-0 text-center" style={{ fontSize: '11px', letterSpacing: '0.5px', width: '150px', borderRadius: '0 6px 6px 0' }}>LOP Days</th>
                           </tr>
                         </thead>
@@ -334,8 +333,8 @@ const Payroll = () => {
                           {filteredEmployees.map(emp => (
                             <tr key={emp._id} className="border-bottom">
                               <td className="py-3 px-3 text-muted">{emp.employeeId}</td>
-                              <td className="py-3 px-3 fw-medium text-dark">{emp.firstName} {emp.lastName}</td>
-                              <td className="py-3 px-3 text-muted">{emp.department || 'N/A'}</td>
+                              <td className="py-3 px-3 fw-medium text-dark">{emp.employeeName}</td>
+                              <td className="py-3 px-3 text-muted">{emp.designation || 'N/A'}</td>
                               <td className="py-3 px-3">
                                 <input 
                                   type="number" 

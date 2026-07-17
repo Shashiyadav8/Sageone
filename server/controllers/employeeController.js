@@ -34,11 +34,11 @@ const autoGenerateSalaryPackage = async (employeeId, grossSalary) => {
 // @access  Private/Admin
 const createEmployee = async (req, res) => {
   try {
-    const { employeeId, firstName, lastName, email, password, department, designation, joiningDate, grossSalary, banking, documents } = req.body;
+    const { employeeId, employeeName, password, designation, uanNo, esicNo, location, grossSalary, status } = req.body;
 
-    const employeeExists = await Employee.findOne({ $or: [{ email }, { employeeId }] });
+    const employeeExists = await Employee.findOne({ employeeId });
     if (employeeExists) {
-      return res.status(400).json({ message: 'Employee with this email or ID already exists' });
+      return res.status(400).json({ message: 'Employee with this ID already exists' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -46,16 +46,14 @@ const createEmployee = async (req, res) => {
 
     const employee = await Employee.create({
       employeeId,
-      firstName,
-      lastName,
-      email,
+      employeeName,
       password: hashedPassword,
-      department,
       designation,
-      joiningDate,
+      uanNo,
+      esicNo,
+      location,
       grossSalary,
-      banking,
-      documents
+      status
     });
 
     if (employee) {
@@ -67,9 +65,7 @@ const createEmployee = async (req, res) => {
       res.status(201).json({
         _id: employee._id,
         employeeId: employee.employeeId,
-        email: employee.email,
-        firstName: employee.firstName,
-        lastName: employee.lastName
+        employeeName: employee.employeeName
       });
     } else {
       res.status(400).json({ message: 'Invalid employee data' });
@@ -110,11 +106,11 @@ const updateEmployee = async (req, res) => {
     if (employee) {
       // Employees can only update their password. Admins can update everything.
       if (req.userType === 'admin') {
-        employee.firstName = req.body.firstName || employee.firstName;
-        employee.lastName = req.body.lastName || employee.lastName;
-        employee.email = req.body.email || employee.email;
-        employee.department = req.body.department || employee.department;
+        employee.employeeName = req.body.employeeName || employee.employeeName;
         employee.designation = req.body.designation || employee.designation;
+        employee.uanNo = req.body.uanNo || employee.uanNo;
+        employee.esicNo = req.body.esicNo || employee.esicNo;
+        employee.location = req.body.location || employee.location;
         employee.status = req.body.status || employee.status;
         
         if (req.body.grossSalary !== undefined) {
@@ -123,9 +119,6 @@ const updateEmployee = async (req, res) => {
             await autoGenerateSalaryPackage(employee._id, req.body.grossSalary);
           }
         }
-        
-        if (req.body.banking) employee.banking = { ...employee.banking, ...req.body.banking };
-        if (req.body.documents) employee.documents = { ...employee.documents, ...req.body.documents };
       }
 
       if (req.body.password) {
@@ -136,8 +129,7 @@ const updateEmployee = async (req, res) => {
       const updatedEmployee = await employee.save();
       res.json({
         _id: updatedEmployee._id,
-        firstName: updatedEmployee.firstName,
-        email: updatedEmployee.email,
+        employeeName: updatedEmployee.employeeName,
         status: updatedEmployee.status
       });
     } else {
