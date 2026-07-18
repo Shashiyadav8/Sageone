@@ -34,13 +34,16 @@ const numberToWords = (num) => {
   return str.trim();
 };
 
+// Cache the logo image globally to prevent reading and decoding a 1MB file for every single PDF generated (which causes OOM crashes on Render)
+const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
+let cachedLogoImage = null;
+if (fs.existsSync(logoPath)) {
+  const bitmap = fs.readFileSync(logoPath);
+  cachedLogoImage = `data:image/png;base64,${bitmap.toString('base64')}`;
+}
+
 const streamPayslipPDF = async (payroll, employee, res) => {
-  const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
-  let logoImage = null;
-  if (fs.existsSync(logoPath)) {
-    const bitmap = fs.readFileSync(logoPath);
-    logoImage = `data:image/png;base64,${bitmap.toString('base64')}`;
-  }
+  const logoImage = cachedLogoImage;
 
   const docDefinition = {
     defaultStyle: { font: 'Helvetica', fontSize: 10, color: '#333' },

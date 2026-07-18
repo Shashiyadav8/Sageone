@@ -125,13 +125,13 @@ const generateBulkPayroll = async (req, res) => {
       const { employeeId, lopDays } = data;
 
       try {
-        const employee = await Employee.findById(employeeId);
+        const employee = await Employee.findById(employeeId).lean();
         if (!employee) { skippedCount++; continue; }
 
-        const salaryPackage = await SalaryPackage.findOne({ employee: employeeId });
+        const salaryPackage = await SalaryPackage.findOne({ employee: employeeId }).lean();
         if (!salaryPackage || salaryPackage.grossSalary === undefined) { skippedCount++; continue; }
 
-        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
+        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year }).lean();
         if (existingPayroll) { skippedCount++; continue; }
 
         const grossEarnings = salaryPackage.grossSalary;
