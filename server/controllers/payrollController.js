@@ -83,7 +83,7 @@ const generatePayroll = async (req, res) => {
 // @access  Private/Admin
 const getPayrolls = async (req, res) => {
   try {
-    const payrolls = await Payroll.find({}).populate('employee', 'firstName lastName employeeId');
+    const payrolls = await Payroll.find({}).populate('employee', 'employeeName employeeId designation');
     res.json(payrolls);
   } catch (error) {
     res.status(500).json({ message: error.message });
