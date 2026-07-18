@@ -152,7 +152,7 @@ const streamPayslipPDF = async (payroll, employee, res) => {
     res.setHeader('Content-Disposition', `attachment; filename=payslip-${employee.employeeId}-${payroll.month}-${payroll.year}.pdf`);
     
     // Pipe to the Express response stream
-    const stream = pdfDoc.getStream();
+    const stream = await pdfDoc.getStream();
     stream.pipe(res);
     stream.end();
   } catch (error) {
