@@ -107,6 +107,95 @@ const getEmployeePayrolls = async (req, res) => {
   }
 };
 
+// Background worker for bulk payroll to prevent HTTP timeouts and memory crashes
+const processBulkPayrollInBackground = async (month, year, workingDays, employeeData) => {
+  const CHUNK_SIZE = 20;
+  let generatedCount = 0;
+
+  for (let i = 0; i < employeeData.length; i += CHUNK_SIZE) {
+    const chunk = employeeData.slice(i, i + CHUNK_SIZE);
+    let browser = null;
+
+    try {
+      // Launch a new browser instance per chunk to free up memory heavily
+      browser = await puppeteer.launch({
+        headless: 'new',
+        args: [
+          '--no-sandbox', 
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-gpu',
+          '--no-zygote'
+        ]
+      });
+
+      for (const data of chunk) {
+        const { employeeId, lopDays } = data;
+
+        try {
+          const employee = await Employee.findById(employeeId);
+          if (!employee) continue;
+
+          const salaryPackage = await SalaryPackage.findOne({ employee: employeeId });
+          if (!salaryPackage || salaryPackage.grossSalary === undefined) continue;
+
+          const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
+          if (existingPayroll) continue;
+
+          const grossEarnings = salaryPackage.grossSalary;
+          const perDaySalary = grossEarnings / workingDays;
+          const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
+
+          const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
+          const totalDeductions = lopDeduction + fixedDeductions;
+          const netSalary = grossEarnings - totalDeductions;
+
+          const payroll = new Payroll({
+            employee: employeeId,
+            month,
+            year,
+            workingDays,
+            lopDays: lopDays || 0,
+            grossSalary: grossEarnings,
+            netSalary,
+            breakdown: {
+              earnings: {
+                basic: salaryPackage.basicSalary,
+                hra: salaryPackage.hra,
+                otherAllowances: salaryPackage.otherAllowances,
+              },
+              deductions: {
+                lopDeduction,
+                employerPF: salaryPackage.employerPF,
+                employerESI: salaryPackage.employerESI,
+                employeePF: salaryPackage.employeePF,
+                employeeESI: salaryPackage.employeeESI,
+                professionalTax: salaryPackage.professionalTax,
+              }
+            }
+          });
+
+          const pdfUrl = await generatePayslipPDF(payroll, employee, browser);
+          payroll.pdfUrl = pdfUrl;
+
+          await payroll.save();
+          generatedCount++;
+        } catch (err) {
+          console.error(`Error generating PDF for ${employeeId}:`, err);
+        }
+      }
+    } catch (chunkError) {
+      console.error(`Error processing chunk at index ${i}:`, chunkError);
+    } finally {
+      if (browser) {
+        await browser.close();
+      }
+    }
+  }
+  
+  console.log(`Background bulk payroll finished. Successfully generated ${generatedCount} payrolls.`);
+};
+
 // @desc    Generate payroll for multiple employees at once (Bulk Wizard)
 // @route   POST /api/payroll/generate-all
 // @access  Private/Admin
@@ -119,108 +208,13 @@ const generateBulkPayroll = async (req, res) => {
       return res.status(400).json({ message: 'No employee data provided for bulk generation' });
     }
 
-    const generatedPayrolls = [];
-    const skippedPayrolls = [];
+    // Fire and forget the background job
+    processBulkPayrollInBackground(month, year, workingDays, employeeData).catch(console.error);
 
-    // Launch a single browser instance for the entire batch to prevent memory leaks in cloud environments
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote'
-      ]
-    });
-
-    // Process sequentially to ensure PDF generation works without overloading memory/puppeteer
-    for (const data of employeeData) {
-      const { employeeId, lopDays } = data;
-
-      try {
-        const employee = await Employee.findById(employeeId);
-        if (!employee) {
-          skippedPayrolls.push({ employeeId, reason: 'Employee not found' });
-          continue;
-        }
-
-        const salaryPackage = await SalaryPackage.findOne({ employee: employeeId });
-        if (!salaryPackage) {
-          skippedPayrolls.push({ name: `${employee.firstName} ${employee.lastName}`, reason: 'Salary package not configured' });
-          continue;
-        }
-
-        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
-        if (existingPayroll) {
-          skippedPayrolls.push({ name: `${employee.firstName} ${employee.lastName}`, reason: 'Already generated' });
-          continue;
-        }
-
-        // Calculate Earnings
-        const grossEarnings = salaryPackage.grossSalary;
-
-        if (grossEarnings === undefined) {
-          skippedPayrolls.push({ name: `${employee.firstName} ${employee.lastName}`, reason: 'Salary structure is missing or legacy. Please update Monthly Gross Salary.' });
-          continue;
-        }
-
-        // Calculate LOP Deduction
-        const perDaySalary = grossEarnings / workingDays;
-        const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
-
-        // Calculate other Deductions
-        const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
-        const totalDeductions = lopDeduction + fixedDeductions;
-
-        // Calculate Net
-        const netSalary = grossEarnings - totalDeductions;
-
-        const payroll = new Payroll({
-          employee: employeeId,
-          month,
-          year,
-          workingDays,
-          lopDays: lopDays || 0,
-          grossSalary: grossEarnings,
-          netSalary,
-          breakdown: {
-            earnings: {
-              basic: salaryPackage.basicSalary,
-              hra: salaryPackage.hra,
-              otherAllowances: salaryPackage.otherAllowances,
-            },
-            deductions: {
-              lopDeduction,
-              employerPF: salaryPackage.employerPF,
-              employerESI: salaryPackage.employerESI,
-              employeePF: salaryPackage.employeePF,
-              employeeESI: salaryPackage.employeeESI,
-              professionalTax: salaryPackage.professionalTax,
-            }
-          }
-        });
-
-        const pdfUrl = await generatePayslipPDF(payroll, employee, browser);
-        payroll.pdfUrl = pdfUrl;
-
-        await payroll.save();
-        generatedPayrolls.push(payroll);
-      } catch (err) {
-        skippedPayrolls.push({ employeeId, reason: err.message });
-      }
-    }
-    
-    // Clean up the browser instance after the batch completes
-    if (browser) {
-      await browser.close();
-    }
-
-    res.status(201).json({
-      message: `Successfully generated ${generatedPayrolls.length} payrolls. Skipped ${skippedPayrolls.length}.`,
-      generatedCount: generatedPayrolls.length,
-      skippedCount: skippedPayrolls.length,
-      skippedDetails: skippedPayrolls
+    // Immediately respond to the client so Render doesn't timeout (100s limit)
+    res.status(202).json({
+      message: 'Bulk payroll processing has started in the background. Please check the Recent Payrolls table in a few minutes as the PDFs are generated.',
+      totalEmployees: employeeData.length
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
