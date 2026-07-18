@@ -121,6 +121,9 @@ const processBulkPayrollInBackground = async (jobId, month, year, workingDays, e
     try {
       // Process chunk sequentially to avoid Cloudinary rate limits
       for (const data of chunk) {
+        // Yield to the event loop for 50ms so Express can respond to HTTP health checks and status polls
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
         const { employeeId, lopDays } = data;
 
         try {
