@@ -130,8 +130,7 @@ const generateBulkPayroll = async (req, res) => {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote',
-        '--single-process'
+        '--no-zygote'
       ]
     });
 

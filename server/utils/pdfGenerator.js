@@ -195,8 +195,7 @@ const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => 
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote',
-        '--single-process'
+        '--no-zygote'
       ]
     });
     
