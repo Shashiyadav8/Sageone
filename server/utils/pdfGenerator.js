@@ -24,7 +24,7 @@ const numberToWords = (num) => {
   return str.trim();
 };
 
-const generatePayslipPDF = async (payroll, employee) => {
+const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => {
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -188,14 +188,27 @@ const generatePayslipPDF = async (payroll, employee) => {
   `;
 
   try {
-    const browser = await puppeteer.launch({
+    const browser = providedBrowser || await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
+        '--single-process'
+      ]
     });
+    
     const page = await browser.newPage();
     await page.setContent(htmlContent);
     await page.pdf({ path: filePath, format: 'A4', printBackground: true });
-    await browser.close();
+    
+    await page.close();
+    
+    if (!providedBrowser) {
+      await browser.close();
+    }
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {

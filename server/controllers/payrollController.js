@@ -2,6 +2,7 @@ const Payroll = require('../models/Payroll');
 const SalaryPackage = require('../models/SalaryPackage');
 const Employee = require('../models/Employee');
 const { generatePayslipPDF } = require('../utils/pdfGenerator');
+const puppeteer = require('puppeteer');
 
 // @desc    Generate payroll for an employee
 // @route   POST /api/payroll/generate/:employeeId
@@ -121,6 +122,19 @@ const generateBulkPayroll = async (req, res) => {
     const generatedPayrolls = [];
     const skippedPayrolls = [];
 
+    // Launch a single browser instance for the entire batch to prevent memory leaks in cloud environments
+    const browser = await puppeteer.launch({
+      headless: 'new',
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
+        '--single-process'
+      ]
+    });
+
     // Process sequentially to ensure PDF generation works without overloading memory/puppeteer
     for (const data of employeeData) {
       const { employeeId, lopDays } = data;
@@ -188,7 +202,7 @@ const generateBulkPayroll = async (req, res) => {
           }
         });
 
-        const pdfUrl = await generatePayslipPDF(payroll, employee);
+        const pdfUrl = await generatePayslipPDF(payroll, employee, browser);
         payroll.pdfUrl = pdfUrl;
 
         await payroll.save();
@@ -196,6 +210,11 @@ const generateBulkPayroll = async (req, res) => {
       } catch (err) {
         skippedPayrolls.push({ employeeId, reason: err.message });
       }
+    }
+    
+    // Clean up the browser instance after the batch completes
+    if (browser) {
+      await browser.close();
     }
 
     res.status(201).json({
