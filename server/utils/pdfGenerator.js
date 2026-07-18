@@ -1,4 +1,4 @@
-const PdfPrinter = require('pdfmake/js/printer').default;
+
 const fs = require('fs');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
