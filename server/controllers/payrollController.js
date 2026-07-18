@@ -123,13 +123,15 @@ const processBulkPayrollInBackground = async (jobId, month, year, workingDays, e
     try {
       // Launch a new browser instance per chunk to free up memory heavily
       browser = await puppeteer.launch({
-        headless: 'new',
+        headless: 'shell', // Use the ultra-lightweight shell mode instead of the heavy 'new' mode
         args: [
           '--no-sandbox', 
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          '--no-zygote'
+          '--no-zygote',
+          '--single-process',
+          '--disable-extensions'
         ]
       });
 

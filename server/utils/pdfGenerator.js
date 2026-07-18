@@ -189,13 +189,15 @@ const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => 
 
   try {
     const browser = providedBrowser || await puppeteer.launch({
-      headless: 'new',
+      headless: 'shell',
       args: [
         '--no-sandbox', 
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote'
+        '--no-zygote',
+        '--single-process',
+        '--disable-extensions'
       ]
     });
     
