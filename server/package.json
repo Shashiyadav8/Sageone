@@ -22,7 +22,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.4",
     "multer": "^2.2.0",
-    "puppeteer": "^25.3.0"
+    "pdfmake": "^0.3.11"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

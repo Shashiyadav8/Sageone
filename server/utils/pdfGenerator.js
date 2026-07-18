@@ -1,7 +1,6 @@
-const puppeteer = require('puppeteer');
+const PdfPrinter = require('pdfmake/js/printer').default;
 const fs = require('fs');
 const path = require('path');
-
 const cloudinary = require('cloudinary').v2;
 
 cloudinary.config({
@@ -9,6 +8,17 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
+const fonts = {
+  Helvetica: {
+    normal: 'Helvetica',
+    bold: 'Helvetica-Bold',
+    italics: 'Helvetica-Oblique',
+    bolditalics: 'Helvetica-BoldOblique'
+  }
+};
+const pdfmake = require('pdfmake');
+pdfmake.setFonts(fonts);
 
 const numberToWords = (num) => {
   const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
@@ -24,7 +34,7 @@ const numberToWords = (num) => {
   return str.trim();
 };
 
-const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => {
+const generatePayslipPDF = async (payroll, employee) => {
   const uploadsDir = path.join(__dirname, '..', 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
@@ -34,182 +44,117 @@ const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => 
   const filePath = path.join(uploadsDir, fileName);
 
   const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
-  let logoHtml = `<div class="logo">Sage<span>Path</span></div>`;
+  let logoImage = null;
   if (fs.existsSync(logoPath)) {
     const bitmap = fs.readFileSync(logoPath);
-    const logoBase64 = `data:image/png;base64,${bitmap.toString('base64')}`;
-    logoHtml = `<img src="${logoBase64}" style="max-height: 55px; max-width: 200px; margin-left: 20px; object-fit: contain;" />`;
+    logoImage = `data:image/png;base64,${bitmap.toString('base64')}`;
   }
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Payslip</title>
-      <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; margin: 30px; font-size: 11px; }
-        .header-table { width: 100%; margin-bottom: 10px; }
-        .logo-td { width: 30%; }
-        .logo { font-size: 28px; font-weight: bold; color: #0F172A; margin-left: 20px; }
-        .logo span { color: #2563EB; }
-        .address-td { width: 40%; text-align: center; }
-        .company-name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .company-address { font-size: 10px; color: #555; }
-        .title-td { width: 30%; text-align: center; }
-        .title-text { font-size: 12px; color: #333; }
-        .title-month { font-size: 14px; font-weight: bold; margin-top: 5px; }
-
-        .main-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-        .main-table td, .main-table th { border: 1px solid #666; padding: 4px 6px; }
-        .col-label { font-weight: bold; width: 15%; }
-        .col-value { width: 35%; }
-        
-        .salary-header th { background-color: #fff; text-align: center; font-weight: bold; }
-        .amount-col { text-align: right; width: 15%; }
-        .desc-col { width: 35%; }
-        
-        .net-pay-row { font-weight: bold; }
-      </style>
-    </head>
-    <body>
-      <div style="text-align: left; font-size: 10px; margin-bottom: 5px;">${new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })} <span style="float: right;">Payslip</span></div>
-      
-      <table class="header-table">
-        <tr>
-          <td class="logo-td">
-            ${logoHtml}
-          </td>
-          <td class="address-td">
-            <div class="company-name">SagePath Labs Pvt Ltd</div>
-            <div class="company-address">
-              Address: first floor, Plot No.564, Budha Nagar,<br/>
-              Buddha Nagar Colony, Mallikarjuna Nagar,<br/>
-              Boduppal, Hyderabad, Telangana 500092
-            </div>
-          </td>
-          <td class="title-td">
-            <div class="title-text">Payslip for the month</div>
-            <div class="title-month">${payroll.month} ${payroll.year}</div>
-          </td>
-        </tr>
-      </table>
-      
-      <table class="main-table">
-        <tr>
-          <td class="col-label">Employee No</td>
-          <td class="col-value">${employee.employeeId}</td>
-          <td class="col-label">Name</td>
-          <td class="col-value">${employee.employeeName}</td>
-          <td class="col-label">Location</td>
-          <td class="col-value">${employee.location || ''}</td>
-        </tr>
-        <tr>
-          <td class="col-label">Designation</td>
-          <td class="col-value">${employee.designation || ''}</td>
-          <td class="col-label">ESIC No</td>
-          <td class="col-value">${employee.esicNo || ''}</td>
-          <td class="col-label">Payable Days</td>
-          <td class="col-value">${payroll.workingDays}</td>
-        </tr>
-        <tr>
-          <td class="col-label">UAN No</td>
-          <td class="col-value">${employee.uanNo || ''}</td>
-          <td class="col-label">Status</td>
-          <td class="col-value">${employee.status || 'Active'}</td>
-          <td class="col-label">Month Days</td>
-          <td class="col-value">${payroll.workingDays + payroll.lopDays}</td>
-        </tr>
-      </table>
-
-      <table class="main-table">
-        <tr class="salary-header">
-          <th colspan="2">Earnings</th>
-          <th colspan="2">Deductions</th>
-        </tr>
-        <tr class="salary-header">
-          <th>Particulars</th>
-          <th>Amount</th>
-          <th>Particulars</th>
-          <th>Amount</th>
-        </tr>
-        <tr>
-          <td class="desc-col">Basic</td>
-          <td class="amount-col">${(payroll.breakdown?.earnings?.basic || 0).toFixed(2)}</td>
-          <td class="desc-col">Provident Fund (Employee)</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.employeePF || 0).toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col">House Rent Allowance</td>
-          <td class="amount-col">${(payroll.breakdown?.earnings?.hra || 0).toFixed(2)}</td>
-          <td class="desc-col">ESI Employee</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.employeeESI || 0).toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col">Other Allowances</td>
-          <td class="amount-col">${(payroll.breakdown?.earnings?.otherAllowances || 0).toFixed(2)}</td>
-          <td class="desc-col">Professional Tax</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.professionalTax || 0).toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col"></td>
-          <td class="amount-col"></td>
-          <td class="desc-col">LOP Deduction</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.lopDeduction || 0).toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col"></td>
-          <td class="amount-col"></td>
-          <td class="desc-col">Provident Fund (Employer)</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.employerPF || 0).toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td class="desc-col"></td>
-          <td class="amount-col"></td>
-          <td class="desc-col">ESI Employer</td>
-          <td class="amount-col">${(payroll.breakdown?.deductions?.employerESI || 0).toFixed(2)}</td>
-        </tr>
-        <tr style="font-weight: bold;">
-          <td>Total Earnings</td>
-          <td class="amount-col">${payroll.grossSalary.toFixed(2)}</td>
-          <td>Total Deductions</td>
-          <td class="amount-col">${(payroll.grossSalary - payroll.netSalary).toFixed(2)}</td>
-        </tr>
-      </table>
-
-      <table class="main-table">
-        <tr>
-          <td class="net-pay-row">
-            Net Pay : Rs.${payroll.netSalary.toFixed(2)}/- (${numberToWords(Math.round(payroll.netSalary))})
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
-  `;
+  const docDefinition = {
+    defaultStyle: { font: 'Helvetica', fontSize: 10, color: '#333' },
+    content: [
+      {
+        columns: [
+          { text: `${new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })}`, fontSize: 9 },
+          { text: 'Payslip', alignment: 'right', fontSize: 9 }
+        ],
+        margin: [0, 0, 0, 10]
+      },
+      {
+        columns: [
+          logoImage ? { image: logoImage, width: 120 } : { text: 'SagePath Labs', fontSize: 16, bold: true, color: '#0F172A' },
+          {
+            stack: [
+              { text: 'SagePath Labs Pvt Ltd', bold: true, fontSize: 14, color: '#000', margin: [0, 0, 0, 4] },
+              { text: 'Address: first floor, Plot No.564, Budha Nagar,\nBuddha Nagar Colony, Mallikarjuna Nagar,\nBoduppal, Hyderabad, Telangana 500092', fontSize: 8, color: '#555' }
+            ],
+            alignment: 'center'
+          },
+          {
+            text: [
+              { text: 'Payslip for the month\n', fontSize: 10 },
+              { text: `${payroll.month} ${payroll.year}`, bold: true, fontSize: 12, color: '#000' }
+            ],
+            alignment: 'center'
+          }
+        ],
+        margin: [0, 0, 0, 15]
+      },
+      // Employee Details Table
+      {
+        table: {
+          widths: ['15%', '35%', '15%', '35%'],
+          body: [
+            [ {text: 'Employee No', bold: true}, employee.employeeId, {text: 'Name', bold: true}, employee.employeeName ],
+            [ {text: 'Location', bold: true}, employee.location || '', {text: 'Designation', bold: true}, employee.designation || '' ],
+            [ {text: 'ESIC No', bold: true}, employee.esicNo || '', {text: 'Payable Days', bold: true}, payroll.workingDays.toString() ],
+            [ {text: 'UAN No', bold: true}, employee.uanNo || '', {text: 'Status', bold: true}, employee.status || 'Active' ],
+            [ {text: 'Month Days', bold: true}, (payroll.workingDays + payroll.lopDays).toString(), '', '' ]
+          ]
+        },
+        layout: {
+          hLineWidth: () => 1, vLineWidth: () => 1,
+          hLineColor: () => '#666', vLineColor: () => '#666',
+          paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4
+        },
+        margin: [0, 0, 0, 15]
+      },
+      // Salary Breakdown Table
+      {
+        table: {
+          widths: ['35%', '15%', '35%', '15%'],
+          body: [
+            [
+              { text: 'Earnings', colSpan: 2, alignment: 'center', bold: true }, {},
+              { text: 'Deductions', colSpan: 2, alignment: 'center', bold: true }, {}
+            ],
+            [
+              { text: 'Particulars', alignment: 'center', bold: true },
+              { text: 'Amount', alignment: 'center', bold: true },
+              { text: 'Particulars', alignment: 'center', bold: true },
+              { text: 'Amount', alignment: 'center', bold: true }
+            ],
+            [ 'Basic', { text: (payroll.breakdown?.earnings?.basic || 0).toFixed(2), alignment: 'right' }, 'Provident Fund (Employee)', { text: (payroll.breakdown?.deductions?.employeePF || 0).toFixed(2), alignment: 'right' } ],
+            [ 'House Rent Allowance', { text: (payroll.breakdown?.earnings?.hra || 0).toFixed(2), alignment: 'right' }, 'ESI Employee', { text: (payroll.breakdown?.deductions?.employeeESI || 0).toFixed(2), alignment: 'right' } ],
+            [ 'Other Allowances', { text: (payroll.breakdown?.earnings?.otherAllowances || 0).toFixed(2), alignment: 'right' }, 'Professional Tax', { text: (payroll.breakdown?.deductions?.professionalTax || 0).toFixed(2), alignment: 'right' } ],
+            [ '', '', 'LOP Deduction', { text: (payroll.breakdown?.deductions?.lopDeduction || 0).toFixed(2), alignment: 'right' } ],
+            [ '', '', 'Provident Fund (Employer)', { text: (payroll.breakdown?.deductions?.employerPF || 0).toFixed(2), alignment: 'right' } ],
+            [ '', '', 'ESI Employer', { text: (payroll.breakdown?.deductions?.employerESI || 0).toFixed(2), alignment: 'right' } ],
+            [ 
+              { text: 'Total Earnings', bold: true }, 
+              { text: payroll.grossSalary.toFixed(2), alignment: 'right', bold: true }, 
+              { text: 'Total Deductions', bold: true }, 
+              { text: (payroll.grossSalary - payroll.netSalary).toFixed(2), alignment: 'right', bold: true } 
+            ]
+          ]
+        },
+        layout: {
+          hLineWidth: () => 1, vLineWidth: () => 1,
+          hLineColor: () => '#666', vLineColor: () => '#666',
+          paddingLeft: () => 6, paddingRight: () => 6, paddingTop: () => 4, paddingBottom: () => 4
+        },
+        margin: [0, 0, 0, 15]
+      },
+      // Net Pay Row
+      {
+        table: {
+          widths: ['100%'],
+          body: [
+            [ { text: `Net Pay : Rs.${payroll.netSalary.toFixed(2)}/- (${numberToWords(Math.round(payroll.netSalary))})`, bold: true, margin: [0, 5, 0, 5] } ]
+          ]
+        },
+        layout: {
+          hLineWidth: () => 1, vLineWidth: () => 1,
+          hLineColor: () => '#666', vLineColor: () => '#666',
+          paddingLeft: () => 6, paddingRight: () => 6
+        }
+      }
+    ]
+  };
 
   try {
-    const browser = providedBrowser || await puppeteer.launch({
-      headless: 'shell',
-      args: [
-        '--no-sandbox', 
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote',
-        '--single-process',
-        '--disable-extensions'
-      ]
-    });
-    
-    const page = await browser.newPage();
-    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
-    await page.pdf({ path: filePath, format: 'A4', printBackground: true });
-    
-    await page.close();
-    
-    if (!providedBrowser) {
-      await browser.close();
-    }
+    const pdfDoc = pdfmake.createPdf(docDefinition);
+    await pdfDoc.write(filePath);
 
     // Upload to Cloudinary
     const result = await cloudinary.uploader.upload(filePath, {
@@ -217,10 +162,8 @@ const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => 
       folder: 'sageone/payslips',
       public_id: `payslip-${employee.employeeId}-${payroll.month}-${payroll.year}`
     });
-
-    // Optionally delete the local file after upload
+    
     fs.unlinkSync(filePath);
-
     return result.secure_url;
   } catch (error) {
     console.error('PDF Generation/Upload Error:', error);

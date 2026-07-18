@@ -2,7 +2,6 @@ const Payroll = require('../models/Payroll');
 const SalaryPackage = require('../models/SalaryPackage');
 const Employee = require('../models/Employee');
 const { generatePayslipPDF } = require('../utils/pdfGenerator');
-const puppeteer = require('puppeteer');
 
 // @desc    Generate payroll for an employee
 // @route   POST /api/payroll/generate/:employeeId
@@ -112,29 +111,15 @@ global.bulkJobs = global.bulkJobs || {};
 
 // Background worker for bulk payroll to prevent HTTP timeouts and memory crashes
 const processBulkPayrollInBackground = async (jobId, month, year, workingDays, employeeData) => {
-  const CHUNK_SIZE = 5; // Reduced to 5 to prevent Node.js and Chromium memory bloat on 512MB instances
+  const CHUNK_SIZE = 20; // Increased to 20 since pdfmake has zero memory overhead
   let generatedCount = 0;
   let skippedDetails = [];
 
   for (let i = 0; i < employeeData.length; i += CHUNK_SIZE) {
     const chunk = employeeData.slice(i, i + CHUNK_SIZE);
-    let browser = null;
 
     try {
-      // Launch a new browser instance per chunk to free up memory heavily
-      browser = await puppeteer.launch({
-        headless: 'shell', // Use the ultra-lightweight shell mode instead of the heavy 'new' mode
-        args: [
-          '--no-sandbox', 
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-gpu',
-          '--no-zygote',
-          '--single-process',
-          '--disable-extensions'
-        ]
-      });
-
+      // Process chunk sequentially to avoid Cloudinary rate limits
       for (const data of chunk) {
         const { employeeId, lopDays } = data;
 
@@ -181,7 +166,7 @@ const processBulkPayrollInBackground = async (jobId, month, year, workingDays, e
             }
           });
 
-          const pdfUrl = await generatePayslipPDF(payroll, employee, browser);
+          const pdfUrl = await generatePayslipPDF(payroll, employee);
           payroll.pdfUrl = pdfUrl;
 
           await payroll.save();
@@ -200,13 +185,8 @@ const processBulkPayrollInBackground = async (jobId, month, year, workingDays, e
         }
       }
     } catch (chunkError) {
-      console.error(`Error processing chunk at index ${i}:`, chunkError);
-    } finally {
-      if (browser) {
-        await browser.close();
-      }
-      // Force a tiny pause to allow Node.js Garbage Collector to clear PDF buffers before next chunk
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.error('Error processing chunk:', chunkError);
+      // Even if one chunk fails, we want to continue with the next chunk
     }
   }
   
