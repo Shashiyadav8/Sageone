@@ -129,9 +129,7 @@ const processBulkPayrollInBackground = async (jobId, month, year, workingDays, e
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          '--no-zygote',
-          '--disable-extensions',
-          '--js-flags="--max-old-space-size=256"'
+          '--no-zygote'
         ]
       });
 

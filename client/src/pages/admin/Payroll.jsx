@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { DollarSign, FileText, Users, Search, CheckCircle, ChevronRight, X, Play, RefreshCcw } from 'lucide-react';
+import { DollarSign, FileText, Users, Search, CheckCircle, ChevronRight, X, Play, RefreshCcw, Clock } from 'lucide-react';
 
 const Payroll = () => {
   const [employees, setEmployees] = useState([]);
@@ -327,7 +327,7 @@ const Payroll = () => {
                     ) : (
                       <>
                         <div className="d-inline-flex justify-content-center align-items-center rounded-circle mb-4" style={{ backgroundColor: '#e0f2fe', width: '80px', height: '80px' }}>
-                          <Clock size={40} style={{ color: '#0284c7' }} className="spinner-border spinner-border-sm" style={{ width: '40px', height: '40px' }} />
+                          <Clock size={40} className="spinner-border spinner-border-sm" style={{ color: '#0284c7', width: '40px', height: '40px' }} />
                         </div>
                         <h4 className="fw-bold text-dark mb-2">Processing Started</h4>
                         <p className="text-muted mb-4 px-5">{bulkSummary.message}</p>

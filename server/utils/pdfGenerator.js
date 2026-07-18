@@ -195,14 +195,12 @@ const generatePayslipPDF = async (payroll, employee, providedBrowser = null) => 
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--no-zygote',
-        '--disable-extensions',
-        '--js-flags="--max-old-space-size=256"'
+        '--no-zygote'
       ]
     });
     
     const page = await browser.newPage();
-    await page.setContent(htmlContent);
+    await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
     await page.pdf({ path: filePath, format: 'A4', printBackground: true });
     
     await page.close();
