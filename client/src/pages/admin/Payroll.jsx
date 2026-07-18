@@ -91,43 +91,14 @@ const Payroll = () => {
       const payload = { month: bulkMonth, year: bulkYear, workingDays: bulkWorkingDays, employeeData };
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/payroll/generate-all`, payload, { headers: { Authorization: `Bearer ${token}` } });
       
-      const jobId = res.data.jobId;
-      setBulkSummary(res.data);
-      
-      // Start polling the background job
-      const pollInterval = setInterval(async () => {
-        try {
-          const statusRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll/bulk-status/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
-          const job = statusRes.data;
-          
-          if (job.status === 'completed') {
-            clearInterval(pollInterval);
-            setBulkSummary({
-              status: 'completed',
-              message: `Successfully generated ${job.generatedCount} payrolls.`,
-              skippedDetails: job.errors || []
-            });
-            fetchData();
-            setBulkGenerating(false);
-          } else {
-            // Update progress message
-            setBulkSummary({
-              ...res.data,
-              status: 'processing',
-              message: `Generating PDFs: ${job.processed} out of ${job.total} completed...`
-            });
-          }
-        } catch (pollErr) {
-          console.error("Polling error", pollErr);
-          if (pollErr.response?.status === 404) {
-            clearInterval(pollInterval);
-            setBulkGenerating(false);
-          }
-        }
-      }, 3000);
-      
+      setBulkSummary({
+        status: 'completed',
+        message: `Successfully generated ${res.data.generatedCount} payrolls instantly!`,
+      });
+      fetchData();
     } catch (error) {
       alert(error.response?.data?.message || 'Error running bulk generation.');
+    } finally {
       setBulkGenerating(false);
     }
   };
@@ -226,7 +197,7 @@ const Payroll = () => {
                           ₹{pay.netSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-4 text-end">
-                          <a href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}`} target="_blank" rel="noreferrer" 
+                          <a href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}?token=${localStorage.getItem('token')}`} target="_blank" rel="noreferrer" 
                              className="btn btn-sm px-3 py-1 d-inline-flex align-items-center"
                              style={{ backgroundColor: '#f1f5f9', color: '#3b82f6', borderRadius: '4px', fontSize: '13px', fontWeight: '500', textDecoration: 'none' }}>
                             <FileText size={14} className="me-2" /> View PDF

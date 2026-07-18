@@ -34,15 +34,7 @@ const numberToWords = (num) => {
   return str.trim();
 };
 
-const generatePayslipPDF = async (payroll, employee) => {
-  const uploadsDir = path.join(__dirname, '..', 'uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
-
-  const fileName = `payslip-${employee.employeeId}-${payroll.month}-${payroll.year}.pdf`;
-  const filePath = path.join(uploadsDir, fileName);
-
+const streamPayslipPDF = async (payroll, employee, res) => {
   const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
   let logoImage = null;
   if (fs.existsSync(logoPath)) {
@@ -154,21 +146,21 @@ const generatePayslipPDF = async (payroll, employee) => {
 
   try {
     const pdfDoc = pdfmake.createPdf(docDefinition);
-    await pdfDoc.write(filePath);
-
-    // Upload to Cloudinary
-    const result = await cloudinary.uploader.upload(filePath, {
-      resource_type: 'raw',
-      folder: 'sageone/payslips',
-      public_id: `payslip-${employee.employeeId}-${payroll.month}-${payroll.year}`
-    });
     
-    fs.unlinkSync(filePath);
-    return result.secure_url;
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=payslip-${employee.employeeId}-${payroll.month}-${payroll.year}.pdf`);
+    
+    // Pipe to the Express response stream
+    const stream = pdfDoc.getStream();
+    stream.pipe(res);
+    stream.end();
   } catch (error) {
-    console.error('PDF Generation/Upload Error:', error);
-    throw error;
+    console.error('PDF Generation Error:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error generating PDF');
+    }
   }
 };
 
-module.exports = { generatePayslipPDF };
+module.exports = { streamPayslipPDF };

@@ -1,7 +1,7 @@
 const Payroll = require('../models/Payroll');
 const SalaryPackage = require('../models/SalaryPackage');
 const Employee = require('../models/Employee');
-const { generatePayslipPDF } = require('../utils/pdfGenerator');
+// PDF generation logic has been moved to on-the-fly streaming
 
 // @desc    Generate payroll for an employee
 // @route   POST /api/payroll/generate/:employeeId
@@ -66,9 +66,8 @@ const generatePayroll = async (req, res) => {
       }
     });
 
-    // Generate PDF
-    const pdfUrl = await generatePayslipPDF(payroll, employee);
-    payroll.pdfUrl = pdfUrl;
+    // Set dynamic URL for on-the-fly PDF generation
+    payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
 
     await payroll.save();
     res.status(201).json(payroll);
@@ -107,99 +106,6 @@ const getEmployeePayrolls = async (req, res) => {
 };
 
 // Initialize a global memory store to track background jobs
-global.bulkJobs = global.bulkJobs || {};
-
-// Background worker for bulk payroll to prevent HTTP timeouts and memory crashes
-const processBulkPayrollInBackground = async (jobId, month, year, workingDays, employeeData) => {
-  const CHUNK_SIZE = 20; // Increased to 20 since pdfmake has zero memory overhead
-  let generatedCount = 0;
-  let skippedDetails = [];
-
-  for (let i = 0; i < employeeData.length; i += CHUNK_SIZE) {
-    const chunk = employeeData.slice(i, i + CHUNK_SIZE);
-
-    try {
-      // Process chunk sequentially to avoid Cloudinary rate limits
-      for (const data of chunk) {
-        // Yield to the event loop for 50ms so Express can respond to HTTP health checks and status polls
-        await new Promise(resolve => setTimeout(resolve, 50));
-        
-        const { employeeId, lopDays } = data;
-
-        try {
-          const employee = await Employee.findById(employeeId);
-          if (!employee) continue;
-
-          const salaryPackage = await SalaryPackage.findOne({ employee: employeeId });
-          if (!salaryPackage || salaryPackage.grossSalary === undefined) continue;
-
-          const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
-          if (existingPayroll) continue;
-
-          const grossEarnings = salaryPackage.grossSalary;
-          const perDaySalary = grossEarnings / workingDays;
-          const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
-
-          const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
-          const totalDeductions = lopDeduction + fixedDeductions;
-          const netSalary = grossEarnings - totalDeductions;
-
-          const payroll = new Payroll({
-            employee: employeeId,
-            month,
-            year,
-            workingDays,
-            lopDays: lopDays || 0,
-            grossSalary: grossEarnings,
-            netSalary,
-            breakdown: {
-              earnings: {
-                basic: salaryPackage.basicSalary,
-                hra: salaryPackage.hra,
-                otherAllowances: salaryPackage.otherAllowances,
-              },
-              deductions: {
-                lopDeduction,
-                employerPF: salaryPackage.employerPF,
-                employerESI: salaryPackage.employerESI,
-                employeePF: salaryPackage.employeePF,
-                employeeESI: salaryPackage.employeeESI,
-                professionalTax: salaryPackage.professionalTax,
-              }
-            }
-          });
-
-          const pdfUrl = await generatePayslipPDF(payroll, employee);
-          payroll.pdfUrl = pdfUrl;
-
-          await payroll.save();
-          generatedCount++;
-          
-          if (global.bulkJobs[jobId]) {
-            global.bulkJobs[jobId].processed += 1;
-          }
-        } catch (err) {
-          console.error(`Error generating PDF for ${employeeId}:`, err);
-          skippedDetails.push({ employeeId, reason: err.message });
-          if (global.bulkJobs[jobId]) {
-            global.bulkJobs[jobId].processed += 1;
-            global.bulkJobs[jobId].errors.push({ employeeId, reason: err.message });
-          }
-        }
-      }
-    } catch (chunkError) {
-      console.error('Error processing chunk:', chunkError);
-      // Even if one chunk fails, we want to continue with the next chunk
-    }
-  }
-  
-  if (global.bulkJobs[jobId]) {
-    global.bulkJobs[jobId].status = 'completed';
-    global.bulkJobs[jobId].generatedCount = generatedCount;
-  }
-  console.log(`Background bulk payroll finished for job ${jobId}. Successfully generated ${generatedCount} payrolls.`);
-};
-
 // @desc    Generate payroll for multiple employees at once (Bulk Wizard)
 // @route   POST /api/payroll/generate-all
 // @access  Private/Admin
@@ -212,44 +118,97 @@ const generateBulkPayroll = async (req, res) => {
       return res.status(400).json({ message: 'No employee data provided for bulk generation' });
     }
 
-    const jobId = Date.now().toString();
-    global.bulkJobs[jobId] = {
-      status: 'processing',
-      total: employeeData.length,
-      processed: 0,
-      errors: []
-    };
+    let generatedCount = 0;
+    let skippedCount = 0;
 
-    // Fire and forget the background job
-    processBulkPayrollInBackground(jobId, month, year, workingDays, employeeData).catch(console.error);
+    for (const data of employeeData) {
+      const { employeeId, lopDays } = data;
 
-    // Immediately respond to the client so Render doesn't timeout (100s limit)
-    res.status(202).json({
-      message: 'Bulk payroll processing has started in the background.',
-      jobId,
-      totalEmployees: employeeData.length
+      try {
+        const employee = await Employee.findById(employeeId);
+        if (!employee) { skippedCount++; continue; }
+
+        const salaryPackage = await SalaryPackage.findOne({ employee: employeeId });
+        if (!salaryPackage || salaryPackage.grossSalary === undefined) { skippedCount++; continue; }
+
+        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
+        if (existingPayroll) { skippedCount++; continue; }
+
+        const grossEarnings = salaryPackage.grossSalary;
+        const perDaySalary = grossEarnings / workingDays;
+        const lopDeduction = Math.round(perDaySalary * (lopDays || 0));
+
+        const fixedDeductions = salaryPackage.employeePF + salaryPackage.employeeESI + salaryPackage.professionalTax;
+        const totalDeductions = lopDeduction + fixedDeductions;
+        const netSalary = grossEarnings - totalDeductions;
+
+        const payroll = new Payroll({
+          employee: employeeId,
+          month,
+          year,
+          workingDays,
+          lopDays: lopDays || 0,
+          grossSalary: grossEarnings,
+          netSalary,
+          breakdown: {
+            earnings: {
+              basic: salaryPackage.basicSalary,
+              hra: salaryPackage.hra,
+              otherAllowances: salaryPackage.otherAllowances,
+            },
+            deductions: {
+              lopDeduction,
+              employerPF: salaryPackage.employerPF,
+              employerESI: salaryPackage.employerESI,
+              employeePF: salaryPackage.employeePF,
+              employeeESI: salaryPackage.employeeESI,
+              professionalTax: salaryPackage.professionalTax,
+            }
+          }
+        });
+
+        // Set dynamic URL for on-the-fly PDF generation
+        payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
+
+        await payroll.save();
+        generatedCount++;
+      } catch (err) {
+        console.error(`Error processing employee ${employeeId}:`, err);
+        skippedCount++;
+      }
+    }
+
+    res.status(201).json({
+      message: `Successfully generated ${generatedCount} payrolls. Skipped ${skippedCount}.`,
+      generatedCount
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc    Get bulk payroll job status
-// @route   GET /api/payroll/bulk-status/:jobId
-// @access  Private/Admin
-const getBulkPayrollStatus = async (req, res) => {
+// @desc    Download PDF for a payroll record
+// @route   GET /api/payroll/download/:id
+// @access  Private
+const downloadPayslipPDF = async (req, res) => {
   try {
-    const { jobId } = req.params;
-    const job = global.bulkJobs[jobId];
-    
-    if (!job) {
-      return res.status(404).json({ message: 'Job not found or expired.' });
+    const payroll = await Payroll.findById(req.params.id);
+    if (!payroll) {
+      return res.status(404).json({ message: 'Payroll not found' });
     }
-    
-    res.json(job);
+
+    const employee = await Employee.findById(payroll.employee);
+    if (!employee) {
+      return res.status(404).json({ message: 'Employee not found' });
+    }
+
+    // This will generate the PDF in ~50ms and pipe it straight to the browser
+    const { streamPayslipPDF } = require('../utils/pdfGenerator');
+    await streamPayslipPDF(payroll, employee, res);
   } catch (error) {
+    console.error('Download Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, getBulkPayrollStatus };
+module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF };

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, getBulkPayrollStatus } = require('../controllers/payrollController');
+const { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF } = require('../controllers/payrollController');
 const { protect, adminOnly } = require('../middleware/auth');
 
 router.route('/')
@@ -9,8 +9,8 @@ router.route('/')
 router.route('/generate-all')
   .post(protect, adminOnly, generateBulkPayroll);
 
-router.route('/bulk-status/:jobId')
-  .get(protect, adminOnly, getBulkPayrollStatus);
+router.route('/download/:id')
+  .get(protect, downloadPayslipPDF);
 
 router.route('/generate/:employeeId')
   .post(protect, adminOnly, generatePayroll);
