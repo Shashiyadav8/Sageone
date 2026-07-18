@@ -151,10 +151,9 @@ const streamPayslipPDF = async (payroll, employee, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=payslip-${employee.employeeId}-${payroll.month}-${payroll.year}.pdf`);
     
-    // Pipe to the Express response stream
-    const stream = await pdfDoc.getStream();
-    stream.pipe(res);
-    stream.end();
+    // Generate PDF buffer
+    const buffer = await pdfDoc.getBuffer();
+    res.end(buffer);
   } catch (error) {
     console.error('PDF Generation Error:', error);
     if (!res.headersSent) {
