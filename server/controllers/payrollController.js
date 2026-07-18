@@ -107,10 +107,14 @@ const getEmployeePayrolls = async (req, res) => {
   }
 };
 
+// Initialize a global memory store to track background jobs
+global.bulkJobs = global.bulkJobs || {};
+
 // Background worker for bulk payroll to prevent HTTP timeouts and memory crashes
-const processBulkPayrollInBackground = async (month, year, workingDays, employeeData) => {
-  const CHUNK_SIZE = 20;
+const processBulkPayrollInBackground = async (jobId, month, year, workingDays, employeeData) => {
+  const CHUNK_SIZE = 5; // Reduced to 5 to prevent Node.js and Chromium memory bloat on 512MB instances
   let generatedCount = 0;
+  let skippedDetails = [];
 
   for (let i = 0; i < employeeData.length; i += CHUNK_SIZE) {
     const chunk = employeeData.slice(i, i + CHUNK_SIZE);
@@ -125,7 +129,9 @@ const processBulkPayrollInBackground = async (month, year, workingDays, employee
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
-          '--no-zygote'
+          '--no-zygote',
+          '--disable-extensions',
+          '--js-flags="--max-old-space-size=256"'
         ]
       });
 
@@ -180,8 +186,17 @@ const processBulkPayrollInBackground = async (month, year, workingDays, employee
 
           await payroll.save();
           generatedCount++;
+          
+          if (global.bulkJobs[jobId]) {
+            global.bulkJobs[jobId].processed += 1;
+          }
         } catch (err) {
           console.error(`Error generating PDF for ${employeeId}:`, err);
+          skippedDetails.push({ employeeId, reason: err.message });
+          if (global.bulkJobs[jobId]) {
+            global.bulkJobs[jobId].processed += 1;
+            global.bulkJobs[jobId].errors.push({ employeeId, reason: err.message });
+          }
         }
       }
     } catch (chunkError) {
@@ -190,10 +205,16 @@ const processBulkPayrollInBackground = async (month, year, workingDays, employee
       if (browser) {
         await browser.close();
       }
+      // Force a tiny pause to allow Node.js Garbage Collector to clear PDF buffers before next chunk
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
   }
   
-  console.log(`Background bulk payroll finished. Successfully generated ${generatedCount} payrolls.`);
+  if (global.bulkJobs[jobId]) {
+    global.bulkJobs[jobId].status = 'completed';
+    global.bulkJobs[jobId].generatedCount = generatedCount;
+  }
+  console.log(`Background bulk payroll finished for job ${jobId}. Successfully generated ${generatedCount} payrolls.`);
 };
 
 // @desc    Generate payroll for multiple employees at once (Bulk Wizard)
@@ -208,12 +229,21 @@ const generateBulkPayroll = async (req, res) => {
       return res.status(400).json({ message: 'No employee data provided for bulk generation' });
     }
 
+    const jobId = Date.now().toString();
+    global.bulkJobs[jobId] = {
+      status: 'processing',
+      total: employeeData.length,
+      processed: 0,
+      errors: []
+    };
+
     // Fire and forget the background job
-    processBulkPayrollInBackground(month, year, workingDays, employeeData).catch(console.error);
+    processBulkPayrollInBackground(jobId, month, year, workingDays, employeeData).catch(console.error);
 
     // Immediately respond to the client so Render doesn't timeout (100s limit)
     res.status(202).json({
-      message: 'Bulk payroll processing has started in the background. Please check the Recent Payrolls table in a few minutes as the PDFs are generated.',
+      message: 'Bulk payroll processing has started in the background.',
+      jobId,
       totalEmployees: employeeData.length
     });
   } catch (error) {
@@ -221,4 +251,22 @@ const generateBulkPayroll = async (req, res) => {
   }
 };
 
-module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls };
+// @desc    Get bulk payroll job status
+// @route   GET /api/payroll/bulk-status/:jobId
+// @access  Private/Admin
+const getBulkPayrollStatus = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = global.bulkJobs[jobId];
+    
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found or expired.' });
+    }
+    
+    res.json(job);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, getBulkPayrollStatus };

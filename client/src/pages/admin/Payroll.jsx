@@ -91,11 +91,43 @@ const Payroll = () => {
       const payload = { month: bulkMonth, year: bulkYear, workingDays: bulkWorkingDays, employeeData };
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/payroll/generate-all`, payload, { headers: { Authorization: `Bearer ${token}` } });
       
+      const jobId = res.data.jobId;
       setBulkSummary(res.data);
-      fetchData();
+      
+      // Start polling the background job
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await axios.get(`${import.meta.env.VITE_API_URL}/payroll/bulk-status/${jobId}`, { headers: { Authorization: `Bearer ${token}` } });
+          const job = statusRes.data;
+          
+          if (job.status === 'completed') {
+            clearInterval(pollInterval);
+            setBulkSummary({
+              status: 'completed',
+              message: `Successfully generated ${job.generatedCount} payrolls.`,
+              skippedDetails: job.errors || []
+            });
+            fetchData();
+            setBulkGenerating(false);
+          } else {
+            // Update progress message
+            setBulkSummary({
+              ...res.data,
+              status: 'processing',
+              message: `Generating PDFs: ${job.processed} out of ${job.total} completed...`
+            });
+          }
+        } catch (pollErr) {
+          console.error("Polling error", pollErr);
+          if (pollErr.response?.status === 404) {
+            clearInterval(pollInterval);
+            setBulkGenerating(false);
+          }
+        }
+      }, 3000);
+      
     } catch (error) {
       alert(error.response?.data?.message || 'Error running bulk generation.');
-    } finally {
       setBulkGenerating(false);
     }
   };
@@ -271,26 +303,48 @@ const Payroll = () => {
               <div className="modal-body p-0 bg-white" style={{ display: 'flex', flexDirection: 'column' }}>
                 {bulkSummary ? (
                   <div className="text-center py-5 my-auto">
-                    <div className="d-inline-flex justify-content-center align-items-center rounded-circle mb-4" style={{ backgroundColor: '#e0f2fe', width: '80px', height: '80px' }}>
-                      <Clock size={40} style={{ color: '#0284c7' }} />
-                    </div>
-                    <h4 className="fw-bold text-dark mb-2">Processing Started</h4>
-                    <p className="text-muted mb-4 px-5">{bulkSummary.message}</p>
-                    
-                    <div className="text-start bg-light p-4 rounded-3 d-inline-block mx-auto border" style={{ maxWidth: '600px', width: '100%' }}>
-                      <h6 className="fw-semibold text-primary mb-3" style={{ fontSize: '13px', textTransform: 'uppercase' }}>Background Task Details</h6>
-                      <ul className="mb-0 text-muted list-unstyled" style={{ fontSize: '14px' }}>
-                        <li className="mb-2 pb-2 border-bottom border-light">
-                          <span className="fw-medium text-dark">Total Employees Queued:</span> {bulkSummary.totalEmployees}
-                        </li>
-                        <li className="mb-2 pb-2 border-bottom border-light">
-                          <span className="fw-medium text-dark">Status:</span> Generating PDFs in chunks to conserve memory
-                        </li>
-                        <li>
-                          <span className="fw-medium text-dark">Note:</span> You can close this window. Check the dashboard in ~4 minutes.
-                        </li>
-                      </ul>
-                    </div>
+                    {bulkSummary.status === 'completed' ? (
+                      <>
+                        <div className="d-inline-flex justify-content-center align-items-center rounded-circle mb-4" style={{ backgroundColor: '#dcfce7', width: '80px', height: '80px' }}>
+                          <CheckCircle size={40} style={{ color: '#16a34a' }} />
+                        </div>
+                        <h4 className="fw-bold text-dark mb-2">Processing Completed</h4>
+                        <p className="text-muted mb-4">{bulkSummary.message}</p>
+                        
+                        {bulkSummary.skippedDetails?.length > 0 && (
+                          <div className="text-start bg-light p-4 rounded-3 d-inline-block mx-auto border" style={{ maxWidth: '600px', width: '100%', maxHeight: '300px', overflowY: 'auto' }}>
+                            <h6 className="fw-semibold text-danger mb-3" style={{ fontSize: '13px', textTransform: 'uppercase' }}>Exceptions / Skipped Records</h6>
+                            <ul className="mb-0 text-muted list-unstyled" style={{ fontSize: '14px' }}>
+                              {bulkSummary.skippedDetails.map((s, i) => (
+                                <li key={i} className="mb-2 pb-2 border-bottom border-light">
+                                  <span className="fw-medium text-dark">{s.name || s.employeeId}</span> — {s.reason}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="d-inline-flex justify-content-center align-items-center rounded-circle mb-4" style={{ backgroundColor: '#e0f2fe', width: '80px', height: '80px' }}>
+                          <Clock size={40} style={{ color: '#0284c7' }} className="spinner-border spinner-border-sm" style={{ width: '40px', height: '40px' }} />
+                        </div>
+                        <h4 className="fw-bold text-dark mb-2">Processing Started</h4>
+                        <p className="text-muted mb-4 px-5">{bulkSummary.message}</p>
+                        
+                        <div className="text-start bg-light p-4 rounded-3 d-inline-block mx-auto border" style={{ maxWidth: '600px', width: '100%' }}>
+                          <h6 className="fw-semibold text-primary mb-3" style={{ fontSize: '13px', textTransform: 'uppercase' }}>Background Task Status</h6>
+                          <ul className="mb-0 text-muted list-unstyled" style={{ fontSize: '14px' }}>
+                            <li className="mb-2 pb-2 border-bottom border-light">
+                              <span className="fw-medium text-dark">Total Employees Queued:</span> {bulkSummary.totalEmployees}
+                            </li>
+                            <li className="mb-2 pb-2 border-bottom border-light">
+                              <span className="fw-medium text-dark">Status:</span> Generating PDFs securely. Please leave this window open.
+                            </li>
+                          </ul>
+                        </div>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="d-flex flex-column h-100">
