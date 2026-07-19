@@ -53,24 +53,24 @@ const Payslips = () => {
               <table className="table table-hover align-middle mb-0" style={{ fontSize: '14px' }}>
                 <thead style={{ backgroundColor: '#f8fafc' }}>
                   <tr>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Period</th>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Gross Salary</th>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Deductions</th>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Net Pay</th>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Status</th>
-                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom text-end" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Action</th>
+                    <th className="py-3 px-3 px-md-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Period</th>
+                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom d-none d-md-table-cell" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Gross Salary</th>
+                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom d-none d-md-table-cell" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Deductions</th>
+                    <th className="py-3 px-3 px-md-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Net Pay</th>
+                    <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom d-none d-sm-table-cell" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Status</th>
+                    <th className="py-3 px-3 px-md-4 text-uppercase text-muted fw-semibold border-bottom text-end" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {payrolls.map((pay) => (
                     <tr key={pay._id}>
-                      <td className="py-3 px-4 fw-medium text-dark">
-                        {new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'long' })} {pay.year}
+                      <td className="py-3 px-3 px-md-4 fw-medium text-dark">
+                        {new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'short' })} {pay.year}
                       </td>
-                      <td className="py-3 px-4 text-muted">₹{pay.grossSalary?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
-                      <td className="py-3 px-4 text-muted text-danger">₹{(pay.grossSalary - pay.netSalary)?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
-                      <td className="py-3 px-4 fw-semibold" style={{ color: '#16a34a' }}>₹{pay.netSalary?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-muted d-none d-md-table-cell">₹{pay.grossSalary?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-4 text-muted text-danger d-none d-md-table-cell">₹{(pay.grossSalary - pay.netSalary)?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-3 px-md-4 fw-semibold" style={{ color: '#16a34a' }}>₹{pay.netSalary?.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</td>
+                      <td className="py-3 px-4 d-none d-sm-table-cell">
                         <span className="badge bg-light text-success border d-inline-flex align-items-center px-2 py-1" style={{ fontSize: '12px', fontWeight: '500' }}>
                           Paid
                         </span>
