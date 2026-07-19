@@ -34,8 +34,9 @@ const numberToWords = (num) => {
   return str.trim();
 };
 
-// Cache the logo image globally to prevent reading and decoding a 1MB file for every single PDF generated (which causes OOM crashes on Render)
-const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar.png');
+// Cache the lightweight (13KB) logo image globally to prevent memory spikes.
+// The original 1MB logo caused a 700MB RAM crash during PDF generation on Render.
+const logoPath = path.join(__dirname, '..', '..', 'client', 'src', 'assets', 'sagepath_navbar_small.png');
 let cachedLogoImage = null;
 if (fs.existsSync(logoPath)) {
   const bitmap = fs.readFileSync(logoPath);
