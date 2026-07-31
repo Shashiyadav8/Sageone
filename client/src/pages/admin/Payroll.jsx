@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { DollarSign, FileText, Users, Search, CheckCircle, ChevronRight, X, Play, RefreshCcw, Clock } from 'lucide-react';
+import { DollarSign, FileText, Users, Search, CheckCircle, ChevronRight, X, Play, RefreshCcw, Clock, Trash2 } from 'lucide-react';
 
 const Payroll = () => {
   const [employees, setEmployees] = useState([]);
@@ -62,6 +62,17 @@ const Payroll = () => {
       alert(error.response?.data?.message || 'Error generating payroll.');
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleDelete = async (payrollId) => {
+    if (!window.confirm('Are you sure you want to delete this payslip? This action cannot be undone.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${import.meta.env.VITE_API_URL}/payroll/${payrollId}`, { headers: { Authorization: `Bearer ${token}` } });
+      fetchData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Error deleting payroll.');
     }
   };
 
@@ -129,16 +140,27 @@ const Payroll = () => {
       <div className="row g-4">
         {/* Left Column: Quick Generation List */}
         <div className="col-lg-4">
-          <div className="card border-0 shadow-sm rounded-3" style={{ backgroundColor: '#ffffff' }}>
-            <div className="card-header bg-white border-bottom py-3 px-4">
-              <h6 className="mb-0 fw-semibold" style={{ color: '#334155' }}>Individual Generation</h6>
+          <div className="glass-card">
+            <div className="card-header bg-transparent-glass border-bottom py-3 px-4">
+              <h6 className="mb-3 fw-semibold" style={{ color: '#334155' }}>Individual Generation</h6>
+              <div className="input-group input-group-sm">
+                <span className="input-group-text bg-light border-end-0"><Search size={14} className="text-muted" /></span>
+                <input 
+                  type="text" 
+                  className="form-control border-start-0 bg-light" 
+                  placeholder="Search employees..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  style={{ boxShadow: 'none' }}
+                />
+              </div>
             </div>
             <div className="card-body p-0">
-              <div className="list-group list-group-flush" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-                {employees.length === 0 ? (
-                  <div className="p-4 text-center text-muted small">No active employees found.</div>
+              <div className="list-group list-group-flush" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                {filteredEmployees.length === 0 ? (
+                  <div className="p-4 text-center text-muted small">No employees found.</div>
                 ) : (
-                  employees.map(emp => (
+                  filteredEmployees.map(emp => (
                     <div key={emp._id} className="list-group-item border-bottom py-3 px-4 d-flex justify-content-between align-items-center" style={{ transition: 'background-color 0.2s' }}>
                       <div className="d-flex align-items-center">
                         <div className="rounded-circle bg-light d-flex justify-content-center align-items-center text-primary fw-bold" style={{ width: '40px', height: '40px', fontSize: '14px' }}>
@@ -164,8 +186,8 @@ const Payroll = () => {
 
         {/* Right Column: Payroll History */}
         <div className="col-lg-8">
-          <div className="card border-0 shadow-sm rounded-3" style={{ backgroundColor: '#ffffff' }}>
-            <div className="card-header bg-white border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
+          <div className="glass-card">
+            <div className="card-header bg-transparent-glass border-bottom py-3 px-4 d-flex justify-content-between align-items-center">
               <h6 className="mb-0 fw-semibold" style={{ color: '#334155' }}>Recent Payroll History</h6>
               <button className="btn btn-sm btn-link text-muted p-0 text-decoration-none d-flex align-items-center" onClick={fetchData}>
                 <RefreshCcw size={14} className="me-1" /> Refresh
@@ -173,7 +195,7 @@ const Payroll = () => {
             </div>
             <div className="table-responsive" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
               <table className="table table-hover align-middle mb-0" style={{ fontSize: '14px' }}>
-                <thead style={{ backgroundColor: '#f8fafc', position: 'sticky', top: 0, zIndex: 1 }}>
+                <thead className="bg-transparent-glass" style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                   <tr>
                     <th className="py-3 px-4 text-uppercase text-muted fw-semibold" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Employee</th>
                     <th className="py-3 px-4 text-uppercase text-muted fw-semibold" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Period</th>
@@ -197,11 +219,16 @@ const Payroll = () => {
                           ₹{pay.netSalary.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                         </td>
                         <td className="py-3 px-4 text-end">
-                          <a href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}?token=${localStorage.getItem('token')}`} target="_blank" rel="noreferrer" 
-                             className="btn btn-sm px-3 py-1 d-inline-flex align-items-center"
-                             style={{ backgroundColor: '#f1f5f9', color: '#3b82f6', borderRadius: '4px', fontSize: '13px', fontWeight: '500', textDecoration: 'none' }}>
-                            <FileText size={14} className="me-2" /> View PDF
-                          </a>
+                          <div className="d-flex justify-content-end gap-2">
+                            <a href={pay.pdfUrl?.startsWith('http') ? pay.pdfUrl : `${import.meta.env.VITE_BACKEND_URL}${pay.pdfUrl}?token=${localStorage.getItem('token')}`} target="_blank" rel="noreferrer" 
+                               className="btn btn-sm px-3 py-1 d-inline-flex align-items-center"
+                               style={{ backgroundColor: '#f1f5f9', color: '#3b82f6', borderRadius: '4px', fontSize: '13px', fontWeight: '500', textDecoration: 'none' }}>
+                              <FileText size={14} className="me-2" /> View PDF
+                            </a>
+                            <button onClick={() => handleDelete(pay._id)} className="btn btn-sm px-2 py-1 d-inline-flex align-items-center" style={{ backgroundColor: '#fef2f2', color: '#ef4444', border: '1px solid #fecaca', borderRadius: '4px' }}>
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -244,6 +271,11 @@ const Payroll = () => {
                     <div className="col-md-6">
                       <label className="form-label text-muted fw-semibold mb-2" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Loss of Pay (Days)</label>
                       <input type="number" step="0.5" className="form-control" {...register('lopDays')} style={{ borderRadius: '4px', fontSize: '14px', padding: '10px 12px' }} />
+                    </div>
+                    <div className="col-12 mt-2">
+                      <div className="p-3 rounded" style={{ backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1', fontSize: '13px' }}>
+                        <strong>Tip:</strong> If you process a salary for a month that already has a payslip, it will be automatically <strong>regenerated and overwritten</strong>.
+                      </div>
                     </div>
                   </div>
                 </div>

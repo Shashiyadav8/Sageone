@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF } = require('../controllers/payrollController');
+const { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF, deletePayroll } = require('../controllers/payrollController');
 const { protect, adminOnly } = require('../middleware/auth');
 
 router.route('/')
@@ -11,6 +11,9 @@ router.route('/generate-all')
 
 router.route('/download/:id')
   .get(protect, downloadPayslipPDF);
+
+router.route('/:id')
+  .delete(protect, adminOnly, deletePayroll);
 
 router.route('/generate/:employeeId')
   .post(protect, adminOnly, generatePayroll);

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { UserPlus, Edit, Trash2 } from 'lucide-react';
+import { UserPlus, Edit, Trash2, Search } from 'lucide-react';
 
 const Employees = () => {
   const [employees, setEmployees] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm();
 
@@ -66,6 +67,12 @@ const Employees = () => {
     }
   };
 
+  const filteredEmployees = employees.filter(emp => 
+    emp.employeeName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    emp.employeeId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    emp.designation?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container-fluid py-4 px-4 px-md-5">
       <div className="d-flex justify-content-between align-items-end mb-4 pb-3 border-bottom">
@@ -73,16 +80,29 @@ const Employees = () => {
           <h3 className="fw-bold mb-1" style={{ color: '#1e293b', letterSpacing: '-0.5px' }}>Employee Directory</h3>
           <p className="text-muted mb-0 small">Manage employee records and configurations.</p>
         </div>
-        <button className="btn btn-primary d-flex align-items-center px-4 py-2" onClick={() => openModal()} style={{ backgroundColor: '#0f62fe', borderColor: '#0f62fe', borderRadius: '4px', fontSize: '14px', fontWeight: '500' }}>
-          <UserPlus size={16} className="me-2" /> Add Employee
-        </button>
+        <div className="d-flex gap-3 align-items-center">
+          <div className="input-group input-group-sm" style={{ width: '250px' }}>
+            <span className="input-group-text bg-white border-end-0"><Search size={14} className="text-muted" /></span>
+            <input 
+              type="text" 
+              className="form-control border-start-0 bg-white" 
+              placeholder="Search employees..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{ boxShadow: 'none' }}
+            />
+          </div>
+          <button className="btn btn-primary d-flex align-items-center px-4 py-2" onClick={() => openModal()} style={{ backgroundColor: '#0f62fe', borderColor: '#0f62fe', borderRadius: '4px', fontSize: '14px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+            <UserPlus size={16} className="me-2" /> Add Employee
+          </button>
+        </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-3" style={{ backgroundColor: '#ffffff' }}>
+      <div className="glass-card">
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0" style={{ fontSize: '14px' }}>
-              <thead style={{ backgroundColor: '#f8fafc' }}>
+              <thead className="bg-transparent-glass">
                 <tr>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>ID</th>
                   <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Name</th>
@@ -94,10 +114,10 @@ const Employees = () => {
                 </tr>
               </thead>
               <tbody>
-                {employees.length === 0 ? (
+                {filteredEmployees.length === 0 ? (
                   <tr><td colSpan="7" className="text-center text-muted py-5">No employees found.</td></tr>
                 ) : (
-                  employees.map(emp => (
+                  filteredEmployees.map(emp => (
                     <tr key={emp._id}>
                       <td className="py-3 px-4 fw-medium text-dark">{emp.employeeId}</td>
                       <td className="py-3 px-4 fw-semibold text-dark">{emp.employeeName}</td>

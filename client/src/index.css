@@ -1,20 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --primary-color: #0f62fe;
-  --primary-hover: #0353e9;
-  --dark-color: #0f172a;
-  --dark-sidebar: #1e293b;
+  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --primary-hover: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
   --bg-color: #f8fafc;
-  --text-main: #334155;
+  --text-main: #1e293b;
   --text-muted: #64748b;
-  --border-color: #e2e8f0;
-  --card-bg: #ffffff;
+  --border-color: rgba(226, 232, 240, 0.6);
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
 }
 
+/* Animated Mesh Gradient Background */
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  background-color: var(--bg-color);
+  background-color: #f1f5f9;
+  background-image: 
+    radial-gradient(at 0% 0%, hsla(253,16%,7%,0) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(225,39%,30%,0.05) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(339,49%,30%,0.05) 0, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(264,83%,60%,0.08) 0, transparent 50%),
+    radial-gradient(at 100% 100%, hsla(190,83%,60%,0.08) 0, transparent 50%);
+  background-attachment: fixed;
   color: var(--text-main);
   margin: 0;
   padding: 0;
@@ -22,129 +31,144 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Premium Login Background - Replaced with minimal slate */
-.login-bg {
-  background-color: #f1f5f9;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', 'Inter', sans-serif;
 }
 
-/* Glassmorphism / Modern Card Styles - Replaced with crisp enterprise cards */
-.modern-card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-  transition: box-shadow 0.2s ease;
-}
-
-.modern-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
+/* Premium Glassmorphism Card System */
 .glass-card {
-  background: var(--card-bg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.08);
+}
+
+.modern-card {
+  background: #ffffff;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
 }
 
-/* Custom Buttons - Replaced with solid professional buttons */
-.btn-primary-custom {
-  background-color: var(--primary-color);
-  color: white;
-  border: 1px solid var(--primary-color);
-  padding: 0.5rem 1.2rem;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
+/* Stunning Gradient Buttons */
+.btn-primary-custom, .btn-primary {
+  background: var(--primary-gradient) !important;
+  color: white !important;
+  border: none !important;
+  padding: 0.6rem 1.5rem !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
 }
 
-.btn-primary-custom:hover {
-  background-color: var(--primary-hover);
-  border-color: var(--primary-hover);
-  color: white;
+.btn-primary-custom:hover, .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4) !important;
+  opacity: 0.95;
 }
 
-.btn-primary-custom:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.btn-primary-custom:active, .btn-primary:active {
+  transform: translateY(0);
 }
 
-/* Inputs - Crisp borders, no bubbly glow */
-.form-control-custom {
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
-  background-color: #ffffff;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+/* Glassy Inputs */
+.form-control-custom, .form-control {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(203, 213, 225, 0.6) !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 1rem !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s ease !important;
 }
 
-.form-control-custom:focus {
-  border-color: var(--primary-color);
-  background-color: #ffffff;
-  box-shadow: 0 0 0 2px rgba(15, 98, 254, 0.2);
+.form-control-custom:focus, .form-control:focus {
+  border-color: #6366f1 !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  background: #ffffff !important;
   outline: none;
 }
 
-/* Sidebar and Navigation */
+/* Premium Sidebar */
 .sidebar {
-  background: #ffffff;
-  color: var(--text-main);
-  min-height: 100vh;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-right: 1px solid var(--border-color);
+  min-height: 100vh;
 }
 
 .sidebar .nav-link {
-  color: var(--text-main);
+  color: var(--text-muted);
   font-weight: 500;
-  font-size: 0.875rem;
-  padding: 0.75rem 1.25rem;
-  border-radius: 4px;
-  margin-bottom: 0.25rem;
+  padding: 0.8rem 1.2rem;
+  margin: 0.3rem 1rem;
+  border-radius: 8px;
   transition: all 0.2s ease;
-  border-left: 3px solid transparent;
+  font-size: 0.95rem;
 }
 
 .sidebar .nav-link:hover {
-  background-color: #f1f5f9;
-  color: var(--primary-color);
+  background: rgba(99, 102, 241, 0.05);
+  color: #4f46e5;
+  transform: translateX(4px);
 }
 
+/* We'll use location pathname matching in App.jsx to assign the active class */
 .sidebar .nav-link.active {
-  color: var(--primary-color);
-  background-color: #eff6ff;
-  border-left: 3px solid var(--primary-color);
-  font-weight: 600;
+  background: var(--primary-gradient);
+  color: white;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .sidebar-logo {
-  max-width: 150px;
-  height: auto;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.05));
 }
 
-/* Tables */
+/* Table Hover Animations */
 .table-hover tbody tr {
-  transition: background-color 0.15s ease;
+  transition: all 0.2s ease;
+  border-radius: 8px;
 }
 
 .table-hover tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  transform: scale(1.01);
+  z-index: 10;
+  position: relative;
 }
 
-.table th {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border-color);
-  background-color: #f8fafc;
+/* Scrollbar Styling for a crisp look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
-.table td {
-  font-size: 0.875rem;
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
+/* Utility to override Bootstrap rigid backgrounds */
+.bg-transparent-glass {
+  background: transparent !important;
 }
-

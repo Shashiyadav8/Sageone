@@ -18,10 +18,7 @@ const generatePayroll = async (req, res) => {
     if (!salaryPackage) return res.status(404).json({ message: 'Salary package not configured' });
 
     // Check if payroll already exists
-    const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
-    if (existingPayroll) {
-      return res.status(400).json({ message: `Payroll for ${month}/${year} already generated` });
-    }
+    let existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
 
     // Calculate Earnings
     const grossEarnings = salaryPackage.grossSalary;
@@ -41,15 +38,12 @@ const generatePayroll = async (req, res) => {
     // Calculate Net
     const netSalary = grossEarnings - totalDeductions;
 
-    const payroll = new Payroll({
-      employee: employeeId,
-      month,
-      year,
-      workingDays,
-      lopDays: lopDays || 0,
-      grossSalary: grossEarnings,
-      netSalary,
-      breakdown: {
+    if (existingPayroll) {
+      existingPayroll.workingDays = workingDays;
+      existingPayroll.lopDays = lopDays || 0;
+      existingPayroll.grossSalary = grossEarnings;
+      existingPayroll.netSalary = netSalary;
+      existingPayroll.breakdown = {
         earnings: {
           basic: salaryPackage.basicSalary,
           hra: salaryPackage.hra,
@@ -63,14 +57,41 @@ const generatePayroll = async (req, res) => {
           employeeESI: salaryPackage.employeeESI,
           professionalTax: salaryPackage.professionalTax,
         }
-      }
-    });
+      };
+      existingPayroll.pdfUrl = `/api/payroll/download/${existingPayroll._id}`;
+      await existingPayroll.save();
+      return res.status(200).json(existingPayroll);
+    } else {
+      const payroll = new Payroll({
+        employee: employeeId,
+        month,
+        year,
+        workingDays,
+        lopDays: lopDays || 0,
+        grossSalary: grossEarnings,
+        netSalary,
+        breakdown: {
+          earnings: {
+            basic: salaryPackage.basicSalary,
+            hra: salaryPackage.hra,
+            otherAllowances: salaryPackage.otherAllowances,
+          },
+          deductions: {
+            lopDeduction,
+            employerPF: salaryPackage.employerPF,
+            employerESI: salaryPackage.employerESI,
+            employeePF: salaryPackage.employeePF,
+            employeeESI: salaryPackage.employeeESI,
+            professionalTax: salaryPackage.professionalTax,
+          }
+        }
+      });
 
-    // Set dynamic URL for on-the-fly PDF generation
-    payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
-
-    await payroll.save();
-    res.status(201).json(payroll);
+      // Set dynamic URL for on-the-fly PDF generation
+      payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
+      await payroll.save();
+      return res.status(201).json(payroll);
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -131,8 +152,7 @@ const generateBulkPayroll = async (req, res) => {
         const salaryPackage = await SalaryPackage.findOne({ employee: employeeId }).lean();
         if (!salaryPackage || salaryPackage.grossSalary === undefined) { skippedCount++; continue; }
 
-        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year }).lean();
-        if (existingPayroll) { skippedCount++; continue; }
+        const existingPayroll = await Payroll.findOne({ employee: employeeId, month, year });
 
         const grossEarnings = salaryPackage.grossSalary;
         const perDaySalary = grossEarnings / workingDays;
@@ -142,15 +162,12 @@ const generateBulkPayroll = async (req, res) => {
         const totalDeductions = lopDeduction + fixedDeductions;
         const netSalary = grossEarnings - totalDeductions;
 
-        const payroll = new Payroll({
-          employee: employeeId,
-          month,
-          year,
-          workingDays,
-          lopDays: lopDays || 0,
-          grossSalary: grossEarnings,
-          netSalary,
-          breakdown: {
+        if (existingPayroll) {
+          existingPayroll.workingDays = workingDays;
+          existingPayroll.lopDays = lopDays || 0;
+          existingPayroll.grossSalary = grossEarnings;
+          existingPayroll.netSalary = netSalary;
+          existingPayroll.breakdown = {
             earnings: {
               basic: salaryPackage.basicSalary,
               hra: salaryPackage.hra,
@@ -164,14 +181,41 @@ const generateBulkPayroll = async (req, res) => {
               employeeESI: salaryPackage.employeeESI,
               professionalTax: salaryPackage.professionalTax,
             }
-          }
-        });
+          };
+          existingPayroll.pdfUrl = `/api/payroll/download/${existingPayroll._id}`;
+          await existingPayroll.save();
+          generatedCount++;
+        } else {
+          const payroll = new Payroll({
+            employee: employeeId,
+            month,
+            year,
+            workingDays,
+            lopDays: lopDays || 0,
+            grossSalary: grossEarnings,
+            netSalary,
+            breakdown: {
+              earnings: {
+                basic: salaryPackage.basicSalary,
+                hra: salaryPackage.hra,
+                otherAllowances: salaryPackage.otherAllowances,
+              },
+              deductions: {
+                lopDeduction,
+                employerPF: salaryPackage.employerPF,
+                employerESI: salaryPackage.employerESI,
+                employeePF: salaryPackage.employeePF,
+                employeeESI: salaryPackage.employeeESI,
+                professionalTax: salaryPackage.professionalTax,
+              }
+            }
+          });
 
-        // Set dynamic URL for on-the-fly PDF generation
-        payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
-
-        await payroll.save();
-        generatedCount++;
+          // Set dynamic URL for on-the-fly PDF generation
+          payroll.pdfUrl = `/api/payroll/download/${payroll._id}`;
+          await payroll.save();
+          generatedCount++;
+        }
       } catch (err) {
         console.error(`Error processing employee ${employeeId}:`, err);
         skippedCount++;
@@ -211,4 +255,21 @@ const downloadPayslipPDF = async (req, res) => {
   }
 };
 
-module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF };
+// @desc    Delete a payroll record
+// @route   DELETE /api/payroll/:id
+// @access  Private/Admin
+const deletePayroll = async (req, res) => {
+  try {
+    const payroll = await Payroll.findById(req.params.id);
+    if (!payroll) {
+      return res.status(404).json({ message: 'Payroll not found' });
+    }
+    
+    await Payroll.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Payroll record deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { generatePayroll, generateBulkPayroll, getPayrolls, getEmployeePayrolls, downloadPayslipPDF, deletePayroll };

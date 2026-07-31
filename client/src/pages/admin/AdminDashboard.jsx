@@ -42,7 +42,7 @@ const AdminDashboard = () => {
       
       <div className="row g-4 mb-5">
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm rounded-3 h-100" style={{ backgroundColor: '#ffffff' }}>
+          <div className="glass-card h-100">
             <div className="card-body p-4 d-flex align-items-center">
               <div className="bg-light p-3 rounded-circle me-4">
                 <Users size={24} style={{ color: '#0f62fe' }} />
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
           </div>
         </div>
         <div className="col-md-4">
-          <div className="card border-0 shadow-sm rounded-3 h-100" style={{ backgroundColor: '#ffffff' }}>
+          <div className="glass-card h-100">
             <div className="card-body p-4 d-flex align-items-center">
               <div className="bg-light p-3 rounded-circle me-4">
                 <FileText size={24} style={{ color: '#16a34a' }} />
@@ -69,8 +69,8 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-3 mb-4" style={{ backgroundColor: '#ffffff' }}>
-        <div className="card-header bg-white border-bottom py-3 px-4">
+      <div className="glass-card mb-4">
+        <div className="card-header bg-transparent-glass border-bottom py-3 px-4">
           <h6 className="mb-0 fw-semibold d-flex align-items-center" style={{ color: '#334155' }}>
             <Clock className="me-2 text-muted" size={18} />
             Recent Payrolls
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
           ) : (
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0" style={{ fontSize: '14px' }}>
-                <thead style={{ backgroundColor: '#f8fafc' }}>
+                <thead className="bg-transparent-glass">
                   <tr>
                     <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Employee</th>
                     <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Period</th>

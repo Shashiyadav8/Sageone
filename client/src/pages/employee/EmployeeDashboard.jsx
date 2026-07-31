@@ -57,7 +57,7 @@ const EmployeeDashboard = () => {
   );
 
   return (
-    <div className="container-fluid py-4 px-3 px-md-5" style={{ backgroundColor: '#f9f9fb', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
+    <div className="container-fluid py-4 px-3 px-md-5 bg-transparent-glass">
 
       {/* Header Section */}
       <div className="mb-4 pb-3 border-bottom d-flex justify-content-between align-items-end">
@@ -70,8 +70,8 @@ const EmployeeDashboard = () => {
       <div className="row g-4 mb-4">
         {/* Profile Card */}
         <div className="col-lg-6">
-          <div className="card border-0 shadow-sm rounded-3 h-100" style={{ backgroundColor: '#ffffff' }}>
-            <div className="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center">
+          <div className="glass-card h-100">
+            <div className="card-header bg-transparent-glass border-bottom py-3 px-4 d-flex align-items-center">
               <User size={18} style={{ color: '#0f62fe' }} className="me-2" />
               <h6 className="mb-0 fw-semibold" style={{ color: '#334155' }}>Personal Profile</h6>
             </div>
@@ -104,8 +104,8 @@ const EmployeeDashboard = () => {
 
         {/* Employment Card */}
         <div className="col-lg-6">
-          <div className="card border-0 shadow-sm rounded-3 h-100" style={{ backgroundColor: '#ffffff' }}>
-            <div className="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center">
+          <div className="glass-card h-100">
+            <div className="card-header bg-transparent-glass border-bottom py-3 px-4 d-flex align-items-center">
               <Briefcase size={18} style={{ color: '#0f62fe' }} className="me-2" />
               <h6 className="mb-0 fw-semibold" style={{ color: '#334155' }}>Employment Details</h6>
             </div>

@@ -36,7 +36,7 @@ const Settings = () => {
   };
 
   return (
-    <div className="container-fluid py-4 px-3 px-md-5" style={{ backgroundColor: '#f9f9fb', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
+    <div className="container-fluid py-4 px-3 px-md-5 bg-transparent-glass">
       
       {/* Header Section */}
       <div className="mb-4 pb-3 border-bottom">
@@ -46,8 +46,8 @@ const Settings = () => {
 
       <div className="row">
         <div className="col-lg-5 col-md-8">
-          <div className="card border-0 shadow-sm rounded-3" style={{ backgroundColor: '#ffffff' }}>
-            <div className="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center">
+          <div className="glass-card">
+            <div className="card-header bg-transparent-glass border-bottom py-3 px-4 d-flex align-items-center">
               <Shield size={18} style={{ color: '#0f62fe' }} className="me-2" />
               <h6 className="mb-0 fw-semibold" style={{ color: '#334155' }}>Security Settings</h6>
             </div>

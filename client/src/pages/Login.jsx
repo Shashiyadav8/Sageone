@@ -41,7 +41,7 @@ const Login = () => {
   };
 
   return (
-    <div className="container-fluid p-0 vh-100" style={{ backgroundColor: '#ffffff', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
+    <div className="container-fluid p-0 vh-100" style={{ fontFamily: '"Outfit", "Inter", sans-serif' }}>
       <div className="row g-0 h-100">
         {/* Left Side - Image (Hidden on mobile) */}
         <div className="col-lg-6 d-none d-lg-block position-relative h-100">
@@ -59,7 +59,7 @@ const Login = () => {
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="col-12 col-lg-6 d-flex align-items-center justify-content-center h-100" style={{ backgroundColor: '#ffffff' }}>
+        <div className="col-12 col-lg-6 d-flex align-items-center justify-content-center h-100 bg-transparent-glass">
           <div className="w-100 p-4 p-md-5" style={{ maxWidth: '480px' }}>
             <div className="text-center mb-5">
               <img src={logo} alt="SagePath" style={{ maxWidth: '200px', height: 'auto' }} className="mb-4" />
@@ -84,7 +84,6 @@ const Login = () => {
                   className="form-control" 
                   placeholder="Enter your ID or Admin Email"
                   {...register('email', { required: 'This field is required' })}
-                  style={{ borderRadius: '6px', fontSize: '15px', padding: '12px 16px', border: '1px solid #cbd5e1' }}
                 />
                 {errors.email && <small className="text-danger mt-1 d-block" style={{ fontSize: '13px' }}>{errors.email.message}</small>}
               </div>
@@ -97,7 +96,6 @@ const Login = () => {
                     className="form-control" 
                     placeholder="••••••••"
                     {...register('password', { required: 'Password is required' })}
-                    style={{ borderRadius: '6px', fontSize: '15px', padding: '12px 16px', border: '1px solid #cbd5e1', paddingRight: '45px' }}
                   />
                   <button
                     type="button"
@@ -114,9 +112,8 @@ const Login = () => {
 
               <button 
                 type="submit" 
-                className="btn btn-primary w-100 d-flex justify-content-center align-items-center fw-medium shadow-sm"
+                className="btn btn-primary w-100 mt-2 mb-4 py-2" 
                 disabled={loading}
-                style={{ backgroundColor: '#0f62fe', borderColor: '#0f62fe', borderRadius: '6px', padding: '12px 0', fontSize: '15px' }}
               >
                 {loading ? <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> : null}
                 {loading ? 'Authenticating...' : 'Sign In'}

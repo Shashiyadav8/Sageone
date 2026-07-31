@@ -33,7 +33,7 @@ const Payslips = () => {
   if (loading) return <div className="p-4">Loading payslips...</div>;
 
   return (
-    <div className="container-fluid py-4 px-3 px-md-5" style={{ backgroundColor: '#f9f9fb', minHeight: '100vh', fontFamily: '"Inter", "Segoe UI", sans-serif' }}>
+    <div className="container-fluid py-4 px-3 px-md-5 bg-transparent-glass">
       
       {/* Header Section */}
       <div className="mb-4 pb-3 border-bottom">
@@ -41,7 +41,7 @@ const Payslips = () => {
         <p className="text-muted mb-0 small">View and download your monthly salary slips.</p>
       </div>
 
-      <div className="card border-0 shadow-sm rounded-3" style={{ backgroundColor: '#ffffff' }}>
+      <div className="glass-card">
         {payrolls.length === 0 ? (
           <div className="text-center text-muted py-5">
             <FileText size={48} className="mb-3 opacity-25" />
@@ -51,7 +51,7 @@ const Payslips = () => {
           <div className="card-body p-0">
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0" style={{ fontSize: '14px' }}>
-                <thead style={{ backgroundColor: '#f8fafc' }}>
+                <thead className="bg-transparent-glass">
                   <tr>
                     <th className="py-3 px-3 px-md-4 text-uppercase text-muted fw-semibold border-bottom" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Period</th>
                     <th className="py-3 px-4 text-uppercase text-muted fw-semibold border-bottom d-none d-md-table-cell" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>Gross Salary</th>
