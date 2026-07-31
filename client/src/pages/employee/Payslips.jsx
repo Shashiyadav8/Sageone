@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Search } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const Payslips = () => {
   const [payrolls, setPayrolls] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchPayrolls = async () => {
@@ -30,22 +32,44 @@ const Payslips = () => {
     fetchPayrolls();
   }, []);
 
-  if (loading) return <div className="p-4">Loading payslips...</div>;
+  if (loading) return <Loader text="Loading your payslips..." />;
+
+  const filteredPayrolls = payrolls.filter(pay => {
+    const monthName = new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'short' }).toLowerCase();
+    const monthFullName = new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'long' }).toLowerCase();
+    const yearString = String(pay.year);
+    const query = searchQuery.toLowerCase().trim();
+    
+    return monthName.includes(query) || monthFullName.includes(query) || yearString.includes(query);
+  });
 
   return (
     <div className="container-fluid py-4 px-3 px-md-5 bg-transparent-glass">
       
       {/* Header Section */}
-      <div className="mb-4 pb-3 border-bottom">
-        <h3 className="fw-bold mb-1" style={{ color: '#1e293b', letterSpacing: '-0.5px' }}>My Payslips</h3>
-        <p className="text-muted mb-0 small">View and download your monthly salary slips.</p>
+      <div className="mb-4 pb-3 border-bottom d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div>
+          <h3 className="fw-bold mb-1" style={{ color: '#1e293b', letterSpacing: '-0.5px' }}>My Payslips</h3>
+          <p className="text-muted mb-0 small">View and download your monthly salary slips.</p>
+        </div>
+        <div className="position-relative" style={{ maxWidth: '300px', width: '100%' }}>
+          <Search className="position-absolute text-muted" size={16} style={{ left: '12px', top: '10px' }} />
+          <input 
+            type="text" 
+            className="form-control form-control-sm" 
+            placeholder="Search by month or year..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: '36px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+          />
+        </div>
       </div>
 
       <div className="glass-card">
-        {payrolls.length === 0 ? (
+        {filteredPayrolls.length === 0 ? (
           <div className="text-center text-muted py-5">
             <FileText size={48} className="mb-3 opacity-25" />
-            <p className="mb-0">No payslips have been generated for you yet.</p>
+            <p className="mb-0">{searchQuery ? "No payslips match your search." : "No payslips have been generated for you yet."}</p>
           </div>
         ) : (
           <div className="card-body p-0">
@@ -62,7 +86,7 @@ const Payslips = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {payrolls.map((pay) => (
+                  {filteredPayrolls.map((pay) => (
                     <tr key={pay._id}>
                       <td className="py-3 px-3 px-md-4 fw-medium text-dark">
                         {new Date(pay.year, pay.month - 1).toLocaleString('default', { month: 'short' })} {pay.year}

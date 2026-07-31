@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { User, Briefcase, CreditCard, Award } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const EmployeeDashboard = () => {
   const [employee, setEmployee] = useState(null);
@@ -48,13 +49,7 @@ const EmployeeDashboard = () => {
     fetchSalaryPackage();
   }, [employee]);
 
-  if (!employee) return (
-    <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}>
-      <div className="spinner-border text-primary" role="status">
-        <span className="visually-hidden">Loading...</span>
-      </div>
-    </div>
-  );
+  if (!employee) return <Loader text="Loading your dashboard..." />;
 
   return (
     <div className="container-fluid py-4 px-3 px-md-5 bg-transparent-glass">

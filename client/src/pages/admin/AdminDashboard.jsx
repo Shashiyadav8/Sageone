@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Users, FileText, CheckCircle, Clock } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalEmployees: 0, recentPayrolls: [] });
@@ -31,7 +32,7 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) return <div className="p-4">Loading dashboard...</div>;
+  if (loading) return <Loader text="Loading admin dashboard..." />;
 
   return (
     <div className="container-fluid py-4 px-4 px-md-5">
