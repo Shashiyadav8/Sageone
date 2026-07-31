@@ -69,7 +69,7 @@ const streamPayslipPDF = async (payroll, employee, res) => {
           {
             text: [
               { text: 'Payslip for the month\n', fontSize: 10 },
-              { text: `${payroll.month} ${payroll.year}`, bold: true, fontSize: 12, color: '#000' }
+              { text: `${["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][payroll.month - 1]} ${payroll.year}`, bold: true, fontSize: 12, color: '#000' }
             ],
             alignment: 'center'
           }
