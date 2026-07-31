@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import logo from '../assets/sagepath_navbar.png';
 import loginBg from '../assets/login_bg.png';
 
@@ -9,6 +10,7 @@ const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
@@ -87,15 +89,26 @@ const Login = () => {
                 {errors.email && <small className="text-danger mt-1 d-block" style={{ fontSize: '13px' }}>{errors.email.message}</small>}
               </div>
 
-              <div className="mb-5">
+              <div className="mb-5 position-relative">
                 <label className="form-label fw-semibold" style={{ fontSize: '13px', color: '#475569' }}>Password</label>
-                <input 
-                  type="password" 
-                  className="form-control" 
-                  placeholder="••••••••"
-                  {...register('password', { required: 'Password is required' })}
-                  style={{ borderRadius: '6px', fontSize: '15px', padding: '12px 16px', border: '1px solid #cbd5e1' }}
-                />
+                <div className="position-relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    className="form-control" 
+                    placeholder="••••••••"
+                    {...register('password', { required: 'Password is required' })}
+                    style={{ borderRadius: '6px', fontSize: '15px', padding: '12px 16px', border: '1px solid #cbd5e1', paddingRight: '45px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="position-absolute border-0 bg-transparent"
+                    style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}
+                    tabIndex="-1"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {errors.password && <small className="text-danger mt-1 d-block" style={{ fontSize: '13px' }}>{errors.password.message}</small>}
               </div>
 
