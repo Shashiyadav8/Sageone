@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import Employees from './pages/admin/Employees';
 import Payroll from './pages/admin/Payroll';
+import AdminSettings from './pages/admin/AdminSettings';
 
 import EmployeeDashboard from './pages/employee/EmployeeDashboard';
 import Payslips from './pages/employee/Payslips';
@@ -11,7 +12,7 @@ import Settings from './pages/employee/Settings';
 
 import logo from './assets/sagepath_navbar.png';
 
-import { LogOut, LayoutDashboard, Users, CreditCard, FileText } from 'lucide-react';
+import { LogOut, LayoutDashboard, Users, CreditCard, FileText, Settings as SettingsIcon } from 'lucide-react';
 
 function App() {
   const handleLogout = () => {
@@ -41,6 +42,9 @@ function App() {
                 <NavLink className="nav-link d-flex align-items-center" to="/admin/payroll">
                   <CreditCard size={18} className="me-3" /> Payroll
                 </NavLink>
+                <NavLink className="nav-link d-flex align-items-center" to="/admin/settings">
+                  <SettingsIcon size={18} className="me-3" /> Settings
+                </NavLink>
               </nav>
               <button onClick={handleLogout} className="btn btn-light text-secondary mt-auto d-flex align-items-center justify-content-center border" style={{ borderRadius: '4px', fontSize: '14px', fontWeight: '500' }}>
                 <LogOut size={16} className="me-2" /> Sign Out
@@ -51,6 +55,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="employees" element={<Employees />} />
                 <Route path="payroll" element={<Payroll />} />
+                <Route path="settings" element={<AdminSettings />} />
                 <Route path="*" element={<Navigate to="dashboard" replace />} />
               </Routes>
             </div>
@@ -74,6 +79,9 @@ function App() {
                     </NavLink>
                     <NavLink className="nav-link text-dark fw-medium px-2 d-flex align-items-center" to="/employee/payslips" style={{ fontSize: '14px' }}>
                       My Payslips
+                    </NavLink>
+                    <NavLink className="nav-link text-dark fw-medium px-2 d-flex align-items-center" to="/employee/settings" style={{ fontSize: '14px' }}>
+                      <SettingsIcon size={15} className="me-1" /> Settings
                     </NavLink>
                     <button onClick={handleLogout} className="btn btn-sm btn-light border text-secondary d-flex align-items-center justify-content-center ms-3" style={{ borderRadius: '6px', padding: '8px 16px' }}>
                       <LogOut size={14} className="me-2" /> Sign Out
@@ -100,6 +108,10 @@ function App() {
               <NavLink to="/employee/payslips" className={({ isActive }) => `text-decoration-none d-flex flex-column align-items-center justify-content-center px-3 ${isActive ? 'text-primary' : 'text-muted'}`} style={{ fontSize: '11px', fontWeight: '500' }}>
                 <FileText size={20} className="mb-1" />
                 Payslips
+              </NavLink>
+              <NavLink to="/employee/settings" className={({ isActive }) => `text-decoration-none d-flex flex-column align-items-center justify-content-center px-3 ${isActive ? 'text-primary' : 'text-muted'}`} style={{ fontSize: '11px', fontWeight: '500' }}>
+                <SettingsIcon size={20} className="mb-1" />
+                Settings
               </NavLink>
               <div onClick={handleLogout} className="text-decoration-none d-flex flex-column align-items-center justify-content-center px-3 text-muted" style={{ fontSize: '11px', fontWeight: '500', cursor: 'pointer' }}>
                 <LogOut size={20} className="mb-1" />

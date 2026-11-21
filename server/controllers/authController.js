@@ -77,4 +77,34 @@ const seedAdmin = async (req, res) => {
   }
 };
 
-module.exports = { loginUser, seedAdmin };
+// @desc    Admin change own password
+// @route   PUT /api/auth/change-password
+// @access  Private/Admin
+const changeAdminPassword = async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    const admin = await Admin.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters' });
+    }
+
+    admin.password = await bcrypt.hash(newPassword, 10);
+    await admin.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { loginUser, seedAdmin, changeAdminPassword };
